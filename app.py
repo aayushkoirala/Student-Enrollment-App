@@ -13,6 +13,8 @@ class Users(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password = db.Column(db.String(80), unique=False, nullable=False)
+    
+    #handles 1 to 1
     teachers = db.relationship("Teachers", backref='users', uselist=False)
     students = db.relationship("Students", backref='users', uselist=False)
 
@@ -25,6 +27,7 @@ class Teachers(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), unique=True, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    #handles 1 to many
     classes = db.relationship('Classes', backref='teacher')
     
     def __repr__(self) -> str:
@@ -39,7 +42,6 @@ class Students(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), unique=True, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    #classes = db.relationship('Classes', secondary=Enrollment, backref = db.backref('students', lazy='dynamic'), lazy='dynamic')
     
     def __repr__(self) -> str:
         return '<User %r>' % self.name
@@ -53,28 +55,46 @@ class Classes(db.Model):
     num_enrolled = db.Column(db.Integer, unique=False, nullable=False)
     capacity = db.Column(db.Integer, unique=False, nullable=False)
     day_time = db.Column(db.String(80), unique=False, nullable=False)
+    #handles many to many
     students = db.relationship('Students',secondary=Enrollment)
     
     def __repr__(self) -> str:
         return '<User %r>' % self.Course_Name
 
-#db.drop_all()
-# db.create_all()
-# user = Users(username='a', password='b')
-# db.session.add(user)
-# db.session.commit()
-# student = Students(id=100, name='Yoan', user_id=user.id)
-# db.session.add(student)
-# db.session.commit()
-# user1 = Users(username='c', password='d')
-# db.session.add(user1)
-# db.session.commit()
-# teacher1 = Teachers(name='Cris', user_id=user1.id)
-# db.session.add(teacher1)
-# db.session.commit()
+db.drop_all()
+db.create_all()
+user = Users(id = 1, username='a', password='b')
+db.session.add(user)
+db.session.commit()
+student = Students(id=100, name='Yoan', user_id=user.id)
+db.session.add(student)
+db.session.commit()
+user1 = Users(id=999, username='c', password='d')
+db.session.add(user1)
+db.session.commit()
+teacher1 = Teachers(id=9, name='Cris', user_id=user1.id)
+db.session.add(teacher1)
+db.session.commit()
 
-# class1 = Classes(course_name='CSE106', teacher=teacher1, num_enrolled=100, capacity=120, day_time='MWF 1:30-2:30')
-# class1.students.append(student)
-# db.session.add(class1)
-# db.session.commit()
+class1 = Classes(course_name='CSE106', teacher=teacher1, num_enrolled=100, capacity=120, day_time='MWF 1:30-2:30')
+class1.students.append(student)
+db.session.add(class1)
+db.session.commit()
 
+@app.route('/student/<string:username>,<string:password>', methods=['GET'])
+def verifyCredentials(username, password):
+    user = Users.query.all()
+    for row in user:
+        if row.username == username and row.password == password:
+            id = row.id
+            try:
+                teacher = Teachers.query.filter_by(user_id=id).first()
+                return teacher.name
+            except:
+                student = Students.query.filter_by(user_id=id).first()
+                return student.name
+            
+    return 'False'
+
+if __name__ == '__main__':
+    app.run(debug=True)
