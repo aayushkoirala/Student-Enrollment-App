@@ -35,7 +35,8 @@ class Teachers(db.Model):
     
 Enrollment = db.Table('Enrollment',
                         db.Column('class_id', db.Integer, db.ForeignKey('classes.id')),
-                        db.Column('student_id', db.Integer, db.ForeignKey('students.id'))
+                        db.Column('student_id', db.Integer, db.ForeignKey('students.id')),
+                        db.Column('grade', db.Integer)
                         )
 class Students(db.Model):
     __tablename__='students'
@@ -91,6 +92,42 @@ def to_json(data):
         json_data.update({'username':data.username, 'password':data.password})
     return json_data
 
+def to_json_class(data):
+    try:
+        json_data = []
+        for cls in data:
+            json_data.append({'class_id':cls.class_id, 'student_id':cls.student_id, 'grade':cls.grade})
+    except:
+        json_data = []
+        json_data.append({'class_id':data.class_id, 'student_id':data.student_id, 'grade':cls.grade})
+    return json.dumps(json_data)
+
+@app.route('/home/<string:username>')
+def home(username):
+    try:
+        data = Students.query.filter_by(username=username).first()
+        student = True
+    except:
+        data = Teachers.query.filter_by(username=username).first()
+        student = False
+    if student:
+        enrl = Enrollment.query.filter_by(student_id=data.id).first()
+        enrl = to_json_class(enrl) #[{'class_id':class_id, 'studen_id':student_id, 'grade':grade}, {'class_id':class_id, 'studen_id':student_id},{'class_id':class_id, 'studen_id':student_id}]
+        table = [] #list of tuple (couse name, teacher, time, etc.)
+        for cls in enrl:
+            cls_temp = Classes.query.filter_by(id=cls.class_id)
+            cls_teacher = Teachers.query.filter_by(id=cls_temp.teacher_id)
+            table.append({'course_name':cls_temp.course_name, 'teacher_name':cls_teacher.name, 'day_time':cls_temp.day_time, 'num_enrolled':cls_temp.num_enrolled})
+        table = json.dumps(table)
+    else:
+        table = [] #list of tuple (couse name, teacher, time, etc.)
+        
+        cls_temp = Classes.query.filter_by(id=data.class_id)
+        for cls in cls_temp:
+            table.append({'course_name':cls_temp.course_name, 'teacher_name':data.name, 'day_time':cls_temp.day_time, 'num_enrolled':cls_temp.num_enrolled})
+        table = json.dumps(table)
+    return 'Successfully query data'
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -105,7 +142,8 @@ def login():
             error = 'Invalid Username or Password'
             return render_template('login.html', error=error)
         if password == usr_entered:
-            return 'You successfully login' #redirect to the next page
+            return 'You successfully login' #redirect
+            #return redirect(f'/home/{username}')
         
 
         else:
