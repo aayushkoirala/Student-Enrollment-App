@@ -104,28 +104,34 @@ def to_json_class(data):
 
 @app.route('/home/<string:username>')
 def home(username):
+    #trys to query data if its student or not, this probably will need some ajustments since I think the try will always succeed even if theres no data the exist in the db
     try:
         data = Students.query.filter_by(username=username).first()
         student = True
     except:
         data = Teachers.query.filter_by(username=username).first()
         student = False
+        
     if student:
+        #if student then do the queries to enrollment table
         enrl = Enrollment.query.filter_by(student_id=data.id).first()
         enrl = to_json_class(enrl) #[{'class_id':class_id, 'studen_id':student_id, 'grade':grade}, {'class_id':class_id, 'studen_id':student_id},{'class_id':class_id, 'studen_id':student_id}]
         table = [] #list of tuple (couse name, teacher, time, etc.)
         for cls in enrl:
+            #after we know the data from enrollment table then we can query Classes and Teachers to get the neccesary data
             cls_temp = Classes.query.filter_by(id=cls.class_id)
             cls_teacher = Teachers.query.filter_by(id=cls_temp.teacher_id)
+            #table is the variable that im using to store all the data and be ready to be sent out
             table.append({'course_name':cls_temp.course_name, 'teacher_name':cls_teacher.name, 'day_time':cls_temp.day_time, 'num_enrolled':cls_temp.num_enrolled})
-        table = json.dumps(table)
+        table = json.dumps(table) #making sure its an json object
     else:
+        #similar concept as student except that we only need to query
         table = [] #list of tuple (couse name, teacher, time, etc.)
-        
-        cls_temp = Classes.query.filter_by(id=data.class_id)
-        for cls in cls_temp:
+        cls_temp = Classes.query.filter_by(id=data.id) #queries Classes to retrieve where current teacher (the user login ass) is teaching those classes
+        for cls in cls_temp: #itterates thru each class
+            #inserts into variable table 
             table.append({'course_name':cls_temp.course_name, 'teacher_name':data.name, 'day_time':cls_temp.day_time, 'num_enrolled':cls_temp.num_enrolled})
-        table = json.dumps(table)
+        table = json.dumps(table) #making sure its an json object
     return 'Successfully query data'
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -133,20 +139,20 @@ def login():
     if request.method == 'POST':
         username = request.form['username']
         usr_entered = request.form['password']
+    #queries username and password from db
     query = Users.query.filter_by(username=username).first()
     if query is not None:
+        #if username exist
         try:
             data = to_json(query)
             password = data['password']
         except Exception:
             error = 'Invalid Username or Password'
             return render_template('login.html', error=error)
-        if password == usr_entered:
-            return 'You successfully login' #redirect
+        if password == usr_entered: #check if its correct password
+            return 'You successfully login' #redirect to home and send username on the url
             #return redirect(f'/home/{username}')
-        
-
-        else:
+        else: #else return invalid
             error = 'Invalid Username or Password'
             return f'Fail: {error}'
             #return render_template('login.html', error=error)
