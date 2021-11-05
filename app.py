@@ -81,20 +81,44 @@ class1.students.append(student)
 db.session.add(class1)
 db.session.commit()
 
-@app.route('/student/<string:username>,<string:password>', methods=['GET'])
-def verifyCredentials(username, password):
-    user = Users.query.all()
-    for row in user:
-        if row.username == username and row.password == password:
-            id = row.id
-            try:
-                teacher = Teachers.query.filter_by(user_id=id).first()
-                return teacher.name
-            except:
-                student = Students.query.filter_by(user_id=id).first()
-                return student.name
-            
-    return 'False'
+def to_json(data):
+    try:
+        json_data = json.loads("{}")
+        for student in data:
+            json_data.update({'username':student.username, 'password':student.password})
+    except:
+        json_data = json.loads("{}")
+        json_data.update({'username':data.username, 'password':data.password})
+    return json_data
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        usr_entered = request.form['password']
+    query = Users.query.filter_by(username=username).first()
+    if query is not None:
+        try:
+            data = to_json(query)
+            password = data['password']
+        except Exception:
+            error = 'Invalid Username or Password'
+            return render_template('login.html', error=error)
+        if password == usr_entered:
+            return 'You successfully login' #redirect to the next page
+        
+
+        else:
+            error = 'Invalid Username or Password'
+            return f'Fail: {error}'
+            #return render_template('login.html', error=error)
+
+    else:
+        error = 'Invalid Username or Password'
+        #return render_template('login.html', error=error)
+        return f'Fail: {error}'
+
+    return render_template('login.html')
 
 if __name__ == '__main__':
     app.run(debug=True)
