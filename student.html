@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Home</title>
+  <link rel="stylesheet" href="static\styles\login-page.css">
+  <script defer src="script.js"></script>
+</head>
+<!-- {{g.user.name}} -->
+<body>
+  <ul class="tabs">
+    <li data-tab-target="#home" class="active tab">Your Courses</li>
+    <li data-tab-target="#pricing" class="tab">Add Courses</li>
+  </ul>
+
+  <div class="tab-content">
+    <div id="home" data-tab-content class="active">
+      
+      
+      <table>
+        <tr>
+          <th>Course Name</th>
+          <th>Teacher</th>
+          <th>Time</th>
+          <th>Students Enrolled</th>
+        </tr>
+        <tr>
+          <td>Alfreds Futterkiste</td>
+          <td>Maria Anders</td>
+          <td>Germany</td>
+          <td>joo</td>
+        </tr>
+        <tr>
+          <td>Centro comercial Moctezuma</td>
+          <td>Francisco Chang</td>
+          <td>Mexico</td>
+          <td>kldjfkldj</td>
+        </tr>
+      </table>
+
+    </div>
+    <div id="pricing" data-tab-content>
+      <table>
+        <tr>
+          <th>Course Name</th>
+          <th>Teacher</th>
+          <th>Time</th>
+          <th>Students Enrolled</th>
+        </tr>
+        <tr>
+          <td>Alfreds Futterkiste</td>
+          <td>Maria Anders</td>
+          <td>Germany</td>
+          <td>joo</td>
+        </tr>
+        <tr>
+          <td>Centro comercial Moctezuma</td>
+          <td>Francisco Chang</td>
+          <td>Mexico</td>
+          <td>kldjfkldj</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+</body>
+
+<script>
+  const tabs = document.querySelectorAll('[data-tab-target]')
+const tabContents = document.querySelectorAll('[data-tab-content]')
+
+tabs.forEach(tab => {
+  tab.addEventListener('click', () => {
+    const target = document.querySelector(tab.dataset.tabTarget)
+    tabContents.forEach(tabContent => {
+      tabContent.classList.remove('active')
+    })
+    tabs.forEach(tab => {
+      tab.classList.remove('active')
+    })
+    tab.classList.add('active')
+    target.classList.add('active')
+  })
+})
+</script>
+
+</html>

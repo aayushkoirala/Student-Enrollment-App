@@ -1,12 +1,15 @@
 from enum import unique
-from flask import Flask, render_template, jsonify, request, redirect
+from flask import Flask, render_template, jsonify, request, redirect,session,g
 import json
+
+from flask.helpers import url_for
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__, template_folder='.')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite'
 db = SQLAlchemy(app)
 
+app.secret_key = 'TEAM106'
 
 class Users(db.Model):
     __tablename__='users'
@@ -134,35 +137,83 @@ def home(username):
         table = json.dumps(table) #making sure its an json object
     return 'Successfully query data'
 
+@app.before_request
+def before_request():
+    if 'user_id' in session:
+        query = Students.query.filter_by(user_id=session['user_id']).first()
+        g.user = query
+        
+        
+
+@app.route('/student',methods = ['GET','POST'])
+def student_logged():
+    return render_template('student.html')
+
 @app.route('/login', methods=['GET', 'POST'])
-def login():
+def login_post():
     if request.method == 'POST':
+        session.pop('user_id',None)
         username = request.form['username']
-        usr_entered = request.form['password']
-    #queries username and password from db
-    query = Users.query.filter_by(username=username).first()
-    if query is not None:
-        #if username exist
-        try:
-            data = to_json(query)
-            password = data['password']
-        except Exception:
-            error = 'Invalid Username or Password'
-            return render_template('login.html', error=error)
-        if password == usr_entered: #check if its correct password
-            return 'You successfully login' #redirect to home and send username on the url
-            #return redirect(f'/home/{username}')
-        else: #else return invalid
-            error = 'Invalid Username or Password'
-            return f'Fail: {error}'
-            #return render_template('login.html', error=error)
-
-    else:
-        error = 'Invalid Username or Password'
-        #return render_template('login.html', error=error)
-        return f'Fail: {error}'
-
+        password = request.form['password']
+        query = Users.query.filter_by(username=username).first()
+        if query is not None:
+                 if password == query.password:
+                    session['user_id'] = query.id
+                    # query = Students.query.filter_by(user_id=query.id).first()
+                    print(session['user_id'])
+                    return redirect(url_for('student_logged'))
+                    # return render_template('student.html')
+                 else:
+                    return redirect(url_for('login_post'))
     return render_template('login.html')
+    # if request.method == 'POST':
+    #     
+    #     username = req["username"]
+    #     password = req["password"]
+    #     print("11111111111111111")
+    #     print(username)
+    #     print(password)
+    #     # return render_template('student.html')
+    #     query = Users.query.filter_by(username=username).first()
+    #     if query is not None:
+    #         if password == query.password:
+    #             return render_template('student.html')
+    # else:
+    #     return render_template('login.html')
+# -----------------------------------------------
+
+    # if request.method == 'POST':
+    #     username = request.form['username']
+    #     usr_entered = request.form['password']
+    # #queries username and password from db
+    # query = Users.query.filter_by(username=username).first()
+    # if query is not None:
+    #     #if username exist
+    #     try:
+    #         data = to_json(query)
+    #         password = data['password']
+    #     except Exception:
+    #         error = 'Invalid Username or Password'
+    #         return render_template('login.html', error=error)
+    #     if password == usr_entered: #check if its correct password
+    #         return 'You successfully login' #redirect to home and send username on the url
+    #         #return redirect(f'/home/{username}')
+    #     else: #else return invalid
+    #         error = 'Invalid Username or Password'
+    #         return f'Fail: {error}'
+    #         #return render_template('login.html', error=error)
+
+    # else:
+    #     error = 'Invalid Username or Password'
+    #     #return render_template('login.html', error=error)
+    #     return f'Fail: {error}'
+
+    
+
+# @app.route('/login')
+# def login():
+#     return render_template('login.html')
+
 
 if __name__ == '__main__':
     app.run(debug=True)
