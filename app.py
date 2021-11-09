@@ -9,6 +9,7 @@ app = Flask(__name__, template_folder='.')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite'
 db = SQLAlchemy(app)
 
+# secret key requried for sessions
 app.secret_key = 'TEAM106'
 
 class Users(db.Model):
@@ -137,16 +138,16 @@ def home(username):
         table = json.dumps(table) #making sure its an json object
     return 'Successfully query data'
 
+# assume no user if there is in session then get user g.user for now did only student but have to add teacher also this g.user is used in student html to get name
 @app.before_request
 def before_request():
     g.user = None
-
     if 'user_id' in session:
         query = Students.query.filter_by(user_id=session['user_id']).first()
         g.user = query
         
         
-
+# if there does not exist a user in session then will require them to login, if not then redirect them to student.html or teacher.html which havent implemented
 @app.route('/student',methods = ['GET','POST'])
 def student_logged():
     if not g.user:
@@ -219,8 +220,11 @@ def login_post():
 # def login():
 #     return render_template('login.html')
 
+
+# this is to logout the user
 @app.route('/my-link/')
 def my_link():
+#  pop the user fro the current session then redirect to login
   session.pop('user_id',None)
   return redirect(url_for('login_post'))
 
