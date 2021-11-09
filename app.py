@@ -139,6 +139,8 @@ def home(username):
 
 @app.before_request
 def before_request():
+    g.user = None
+
     if 'user_id' in session:
         query = Students.query.filter_by(user_id=session['user_id']).first()
         g.user = query
@@ -147,6 +149,9 @@ def before_request():
 
 @app.route('/student',methods = ['GET','POST'])
 def student_logged():
+    if not g.user:
+        return redirect(url_for('login_post'))
+    
     return render_template('student.html')
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -214,6 +219,10 @@ def login_post():
 # def login():
 #     return render_template('login.html')
 
+@app.route('/my-link/')
+def my_link():
+  session.pop('user_id',None)
+  return redirect(url_for('login_post'))
 
 if __name__ == '__main__':
     app.run(debug=True)
