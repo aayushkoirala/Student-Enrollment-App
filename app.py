@@ -137,7 +137,12 @@ class getClasses(Resource):
             return json_data
         return error(400)
 
+class getAllClasses(Resource):
+    def get(self):
+        return 'help'
+
 api.add_resource(getClasses, '/student/classes')
+api.add_resource(getAllClasses, '/student/all_classes')
 
 # assume no user if there is in session then get user g.user for now did only student but have to add teacher also this g.user is used in student html to get name
 @app.before_request
