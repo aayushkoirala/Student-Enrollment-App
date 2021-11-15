@@ -89,9 +89,11 @@ db.session.add(teacher1)
 db.session.commit()
 
 class1 = Classes(id = 69, course_name='CSE106', teacher=teacher1, num_enrolled=100, capacity=120, day_time='MWF 1:30-2:30')
+class2 = Classes(id = 79, course_name='CSE116', teacher=teacher1, num_enrolled=100, capacity=120, day_time='MWF 1:30-2:30')
 class1.students.append(student)
-class1.students.append(student1)
+class2.students.append(student1)
 db.session.add(class1)
+db.session.add(class2)
 db.session.commit()
 
 
