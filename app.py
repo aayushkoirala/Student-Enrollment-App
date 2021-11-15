@@ -69,30 +69,9 @@ class Classes(db.Model):
     def __repr__(self) -> str:
         return '<User %r>' % self.course_name
 
-db.drop_all()
-db.create_all()
-user = Users(id = 1, username='a', password='b')
-user23 = Users(id = 2, username='c', password='d')
-db.session.add(user)
-db.session.add(user23)
-db.session.commit()
-student = Students(id=100, name='Yoan', user_id=user.id)
-db.session.add(student)
-student1 = Students(id=101, name='two', user_id=user23.id)
-db.session.add(student1)
-db.session.commit()
-user1 = Users(id=999, username='z', password='d')
-db.session.add(user1)
-db.session.commit()
-teacher1 = Teachers(id=9, name='Cris', user_id=user1.id)
-db.session.add(teacher1)
-db.session.commit()
 
-class1 = Classes(id = 69, course_name='CSE106', teacher=teacher1, num_enrolled=100, capacity=120, day_time='MWF 1:30-2:30')
-class1.students.append(student)
-class1.students.append(student1)
-db.session.add(class1)
-db.session.commit()
+
+
 
 
 class getClasses(Resource):
@@ -108,8 +87,7 @@ class getClasses(Resource):
             for cls in list_classes:
                 current_cls = Classes.query.filter_by(id=cls[0]).first()
                 current_teacher = Teachers.query.filter_by(id = current_cls.teacher_id).first()
-                json_data.update({'class1':{"class_name":current_cls.course_name,"time":current_cls.day_time, "teacher_name":current_teacher.name, "grade":cls[2]}})
-                json_data.update({'class2':{"class_name":current_cls.course_name,"time":current_cls.day_time, "teacher_name":current_teacher.name, "grade":cls[2]}})
+                json_data.update({cls[0]:{"class_name":current_cls.course_name,"time":current_cls.day_time, "teacher_name":current_teacher.name, "grade":cls[2]}})
             print(json_data)
             return json_data
         return error(400)
