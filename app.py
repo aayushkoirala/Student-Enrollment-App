@@ -91,29 +91,49 @@ db.session.commit()
 
 class1 = Classes(id = 69, course_name='CSE106', teacher=teacher1, num_enrolled=100, capacity=120, day_time='MWF 1:30-2:30')
 class2 = Classes(id = 79, course_name='CSE116', teacher=teacher1, num_enrolled=100, capacity=120, day_time='MWF 1:30-2:30')
-class1.students.append(student)
-class2.students.append(student1)
+# class1.students.append(student)
+# class2.students.append(student1)
 db.session.add(class1)
 db.session.add(class2)
 db.session.commit()
 
-
-
+enrolled1 = Enrollment.insert().values(class_id=class1.id, student_id=student.id, grade=96)
+db.session.execute(enrolled1)
+db.session.commit()
+enrolled3 = Enrollment.insert().values(class_id=class1.id, student_id=student1.id, grade=100)
+db.session.execute(enrolled3)
+db.session.commit()
+enrolled2 = Enrollment.insert().values(class_id=class2.id, student_id=student1.id, grade=97)
+db.session.execute(enrolled2)
+db.session.commit()
+enrolled5 = Enrollment.insert().values(class_id=class2.id, student_id=student.id, grade=97)
+db.session.execute(enrolled5)
+db.session.commit()
 class getClasses(Resource):
     def get(self):
         if 'user_id' in session:
             query_student = Students.query.filter_by(user_id=session['user_id']).first()
             query = db.session.query(Enrollment).all()
             list_classes = []
+
             for cls in query:
                 if cls[1] == query_student.id:
-                    list_classes.append(cls)
+                    list_classes.append([cls[0],cls[1],cls[2]])
             json_data = json.loads("{}")
+
+            
+            for i, cls in enumerate(list_classes):
+                count = 0
+                for q in query:
+                    if cls[0] == q[0]:
+                        count += 1
+                list_classes[i].append(count)
+
             for cls in list_classes:
                 current_cls = Classes.query.filter_by(id=cls[0]).first()
                 current_teacher = Teachers.query.filter_by(id = current_cls.teacher_id).first()
-                json_data.update({cls[0]:{"class_name":current_cls.course_name,"time":current_cls.day_time, "teacher_name":current_teacher.name, "grade":cls[2]}})
-            print(json_data)
+                json_data.update({cls[0]:{"class_name":current_cls.course_name,"time":current_cls.day_time, "teacher_name":current_teacher.name, "num_enrolled":cls[3], 'capacity':current_cls.capacity}})
+            
             return json_data
         return error(400)
 

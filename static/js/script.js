@@ -21,7 +21,9 @@ function currClasses() {
                 "</td><td>" +
                 html[key]["time"] +
                 "</td><td>" +
-                html[key]["grade"] +
+                html[key]["num_enrolled"] +
+                "/" +
+                html[key]["capacity"] +
                 "</td></tr>";
         }
         text += "</table>";
