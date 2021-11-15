@@ -1,5 +1,7 @@
+from distutils.log import error
 from enum import unique
 from flask import Flask, render_template, jsonify, request, redirect,session,g
+from flask_restful import Api, Resource
 import json
 
 from flask.helpers import url_for
@@ -8,6 +10,7 @@ from flask_sqlalchemy import SQLAlchemy
 app = Flask(__name__, template_folder='.')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite'
 db = SQLAlchemy(app)
+api = Api(app)
 
 # secret key requried for sessions
 app.secret_key = 'TEAM106'
@@ -47,7 +50,7 @@ class Students(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), unique=True, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    
+    classes = db.relationship('Classes',secondary=Enrollment)
     def __repr__(self) -> str:
         return '<User %r>' % self.name
 
@@ -64,79 +67,54 @@ class Classes(db.Model):
     students = db.relationship('Students',secondary=Enrollment)
     
     def __repr__(self) -> str:
-        return '<User %r>' % self.Course_Name
+        return '<User %r>' % self.course_name
 
 db.drop_all()
 db.create_all()
 user = Users(id = 1, username='a', password='b')
+user23 = Users(id = 2, username='c', password='d')
 db.session.add(user)
+db.session.add(user23)
 db.session.commit()
 student = Students(id=100, name='Yoan', user_id=user.id)
 db.session.add(student)
+student1 = Students(id=101, name='two', user_id=user23.id)
+db.session.add(student1)
 db.session.commit()
-user1 = Users(id=999, username='c', password='d')
+user1 = Users(id=999, username='z', password='d')
 db.session.add(user1)
 db.session.commit()
 teacher1 = Teachers(id=9, name='Cris', user_id=user1.id)
 db.session.add(teacher1)
 db.session.commit()
 
-class1 = Classes(course_name='CSE106', teacher=teacher1, num_enrolled=100, capacity=120, day_time='MWF 1:30-2:30')
+class1 = Classes(id = 69, course_name='CSE106', teacher=teacher1, num_enrolled=100, capacity=120, day_time='MWF 1:30-2:30')
 class1.students.append(student)
+class1.students.append(student1)
 db.session.add(class1)
 db.session.commit()
 
-def to_json(data):
-    try:
-        json_data = json.loads("{}")
-        for student in data:
-            json_data.update({'username':student.username, 'password':student.password})
-    except:
-        json_data = json.loads("{}")
-        json_data.update({'username':data.username, 'password':data.password})
-    return json_data
 
-def to_json_class(data):
-    try:
-        json_data = []
-        for cls in data:
-            json_data.append({'class_id':cls.class_id, 'student_id':cls.student_id, 'grade':cls.grade})
-    except:
-        json_data = []
-        json_data.append({'class_id':data.class_id, 'student_id':data.student_id, 'grade':cls.grade})
-    return json.dumps(json_data)
+class getClasses(Resource):
+    def get(self):
+        if 'user_id' in session:
+            query_student = Students.query.filter_by(user_id=session['user_id']).first()
+            query = db.session.query(Enrollment).all()
+            list_classes = []
+            for cls in query:
+                if cls[1] == query_student.id:
+                    list_classes.append(cls)
+            json_data = json.loads("{}")
+            for cls in list_classes:
+                current_cls = Classes.query.filter_by(id=cls[0]).first()
+                current_teacher = Teachers.query.filter_by(id = current_cls.teacher_id).first()
+                json_data.update({'class1':{"class_name":current_cls.course_name,"time":current_cls.day_time, "teacher_name":current_teacher.name, "grade":cls[2]}})
+                json_data.update({'class2':{"class_name":current_cls.course_name,"time":current_cls.day_time, "teacher_name":current_teacher.name, "grade":cls[2]}})
+            print(json_data)
+            return json_data
+        return error(400)
 
-@app.route('/home/<string:username>')
-def home(username):
-    #trys to query data if its student or not, this probably will need some ajustments since I think the try will always succeed even if theres no data the exist in the db
-    try:
-        data = Students.query.filter_by(username=username).first()
-        student = True
-    except:
-        data = Teachers.query.filter_by(username=username).first()
-        student = False
-        
-    if student:
-        #if student then do the queries to enrollment table
-        enrl = Enrollment.query.filter_by(student_id=data.id).first()
-        enrl = to_json_class(enrl) #[{'class_id':class_id, 'studen_id':student_id, 'grade':grade}, {'class_id':class_id, 'studen_id':student_id},{'class_id':class_id, 'studen_id':student_id}]
-        table = [] #list of tuple (couse name, teacher, time, etc.)
-        for cls in enrl:
-            #after we know the data from enrollment table then we can query Classes and Teachers to get the neccesary data
-            cls_temp = Classes.query.filter_by(id=cls.class_id)
-            cls_teacher = Teachers.query.filter_by(id=cls_temp.teacher_id)
-            #table is the variable that im using to store all the data and be ready to be sent out
-            table.append({'course_name':cls_temp.course_name, 'teacher_name':cls_teacher.name, 'day_time':cls_temp.day_time, 'num_enrolled':cls_temp.num_enrolled})
-        table = json.dumps(table) #making sure its an json object
-    else:
-        #similar concept as student except that we only need to query
-        table = [] #list of tuple (couse name, teacher, time, etc.)
-        cls_temp = Classes.query.filter_by(id=data.id) #queries Classes to retrieve where current teacher (the user login ass) is teaching those classes
-        for cls in cls_temp: #itterates thru each class
-            #inserts into variable table 
-            table.append({'course_name':cls_temp.course_name, 'teacher_name':data.name, 'day_time':cls_temp.day_time, 'num_enrolled':cls_temp.num_enrolled})
-        table = json.dumps(table) #making sure its an json object
-    return 'Successfully query data'
+api.add_resource(getClasses, '/student/classes')
 
 # assume no user if there is in session then get user g.user for now did only student but have to add teacher also this g.user is used in student html to get name
 @app.before_request
@@ -148,11 +126,10 @@ def before_request():
         
         
 # if there does not exist a user in session then will require them to login, if not then redirect them to student.html or teacher.html which havent implemented
-@app.route('/student',methods = ['GET','POST'])
+@app.route('/student')
 def student_logged():
     if not g.user:
         return redirect(url_for('login_post'))
-    
     return render_template('student.html')
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -163,70 +140,22 @@ def login_post():
         password = request.form['password']
         query = Users.query.filter_by(username=username).first()
         if query is not None:
-                 if password == query.password:
-                    session['user_id'] = query.id
-                    # query = Students.query.filter_by(user_id=query.id).first()
-                    print(session['user_id'])
-                    return redirect(url_for('student_logged'))
-                    # return render_template('student.html')
-                 else:
-                    return redirect(url_for('login_post'))
+            if password == query.password:
+                session['user_id'] = query.id
+                # query = Students.query.filter_by(user_id=query.id).first()
+                print(session['user_id'])
+                return redirect(url_for('student_logged'))
+                # return render_template('student.html')
+            else:
+                return redirect(url_for('login_post'))
     return render_template('login.html')
-    # if request.method == 'POST':
-    #     
-    #     username = req["username"]
-    #     password = req["password"]
-    #     print("11111111111111111")
-    #     print(username)
-    #     print(password)
-    #     # return render_template('student.html')
-    #     query = Users.query.filter_by(username=username).first()
-    #     if query is not None:
-    #         if password == query.password:
-    #             return render_template('student.html')
-    # else:
-    #     return render_template('login.html')
-# -----------------------------------------------
-
-    # if request.method == 'POST':
-    #     username = request.form['username']
-    #     usr_entered = request.form['password']
-    # #queries username and password from db
-    # query = Users.query.filter_by(username=username).first()
-    # if query is not None:
-    #     #if username exist
-    #     try:
-    #         data = to_json(query)
-    #         password = data['password']
-    #     except Exception:
-    #         error = 'Invalid Username or Password'
-    #         return render_template('login.html', error=error)
-    #     if password == usr_entered: #check if its correct password
-    #         return 'You successfully login' #redirect to home and send username on the url
-    #         #return redirect(f'/home/{username}')
-    #     else: #else return invalid
-    #         error = 'Invalid Username or Password'
-    #         return f'Fail: {error}'
-    #         #return render_template('login.html', error=error)
-
-    # else:
-    #     error = 'Invalid Username or Password'
-    #     #return render_template('login.html', error=error)
-    #     return f'Fail: {error}'
-
-    
-
-# @app.route('/login')
-# def login():
-#     return render_template('login.html')
-
 
 # this is to logout the user
 @app.route('/my-link/')
 def my_link():
 #  pop the user fro the current session then redirect to login
-  session.pop('user_id',None)
-  return redirect(url_for('login_post'))
+    session.pop('user_id',None)
+    return redirect(url_for('login_post'))
 
 if __name__ == '__main__':
     app.run(debug=True)
