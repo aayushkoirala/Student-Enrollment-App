@@ -69,6 +69,7 @@ class Classes(db.Model):
     def __repr__(self) -> str:
         return '<User %r>' % self.course_name
 
+
 db.drop_all()
 db.create_all()
 user = Users(id = 1, username='a', password='b')
@@ -97,6 +98,7 @@ db.session.add(class2)
 db.session.commit()
 
 
+
 class getClasses(Resource):
     def get(self):
         if 'user_id' in session:
@@ -110,8 +112,7 @@ class getClasses(Resource):
             for cls in list_classes:
                 current_cls = Classes.query.filter_by(id=cls[0]).first()
                 current_teacher = Teachers.query.filter_by(id = current_cls.teacher_id).first()
-                json_data.update({'class1':{"class_name":current_cls.course_name,"time":current_cls.day_time, "teacher_name":current_teacher.name, "grade":cls[2]}})
-                json_data.update({'class2':{"class_name":current_cls.course_name,"time":current_cls.day_time, "teacher_name":current_teacher.name, "grade":cls[2]}})
+                json_data.update({cls[0]:{"class_name":current_cls.course_name,"time":current_cls.day_time, "teacher_name":current_teacher.name, "grade":cls[2]}})
             print(json_data)
             return json_data
         return error(400)
