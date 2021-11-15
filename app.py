@@ -115,20 +115,20 @@ class getClasses(Resource):
             query_student = Students.query.filter_by(user_id=session['user_id']).first()
             query = db.session.query(Enrollment).all()
             list_classes = []
-
+            #retrieve all classes for the given student
             for cls in query:
                 if cls[1] == query_student.id:
                     list_classes.append([cls[0],cls[1],cls[2]])
             json_data = json.loads("{}")
 
-            
+            #this is calculating the number of students enrolled in 1 class
             for i, cls in enumerate(list_classes):
                 count = 0
                 for q in query:
                     if cls[0] == q[0]:
                         count += 1
                 list_classes[i].append(count)
-
+            #this is formatting the data to be sent out
             for cls in list_classes:
                 current_cls = Classes.query.filter_by(id=cls[0]).first()
                 current_teacher = Teachers.query.filter_by(id = current_cls.teacher_id).first()
