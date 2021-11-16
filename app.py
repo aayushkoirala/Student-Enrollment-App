@@ -108,9 +108,9 @@ db.session.commit()
 enrolled2 = Enrollment.insert().values(class_id=class2.id, student_id=student1.id, grade=97)
 db.session.execute(enrolled2)
 db.session.commit()
-enrolled5 = Enrollment.insert().values(class_id=class2.id, student_id=student.id, grade=97)
-db.session.execute(enrolled5)
-db.session.commit()
+# enrolled5 = Enrollment.insert().values(class_id=class2.id, student_id=student.id, grade=97)
+# db.session.execute(enrolled5)
+# db.session.commit()
 class getClasses(Resource):
     def get(self):
         if 'user_id' in session:
