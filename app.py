@@ -45,7 +45,16 @@ Enrollment = db.Table('Enrollment',
                         db.Column('student_id', db.Integer, db.ForeignKey('students.id')),
                         db.Column('grade', db.Integer)
                         )
-
+# class Enrollment(db.Model):
+#     __tablename__='enrollment'
+#     id = db.Column(db.Integer, primary_key=True)
+#     class_id = db.Column('class_id', db.Integer, db.ForeignKey('classes.id')),
+#     student_id = db.Column('student_id', db.Integer, db.ForeignKey('students.id'))
+#     #handles 1 to many
+#     classes = db.relationship('Classes', backref='enrollment')
+    
+    def __repr__(self) -> str:
+        return '<User %r>' % self.id
 # class Association(db.Model):
 #     __tablename__ = 'association'
 #     left_id = db.Column(db.ForeignKey('classes.id'), primary_key=True)
