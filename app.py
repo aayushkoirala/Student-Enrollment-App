@@ -91,10 +91,12 @@ db.session.commit()
 
 class1 = Classes(id = 69, course_name='CSE106', teacher=teacher1, num_enrolled=100, capacity=120, day_time='MWF 1:30-2:30')
 class2 = Classes(id = 79, course_name='CSE116', teacher=teacher1, num_enrolled=100, capacity=120, day_time='MWF 1:30-2:30')
+class3 = Classes(id = 89, course_name='CSE126', teacher=teacher1, num_enrolled=100, capacity=120, day_time='MWF 1:30-2:30')
 # class1.students.append(student)
 # class2.students.append(student1)
 db.session.add(class1)
 db.session.add(class2)
+db.session.add(class3)
 db.session.commit()
 
 enrolled1 = Enrollment.insert().values(class_id=class1.id, student_id=student.id, grade=96)
@@ -137,39 +139,47 @@ class getClasses(Resource):
             return json_data
         return error(400)
 
-class getAllClasses(Resource):
+class getTeacherClasses(Resource):
     def get(self):
-        all_classes = Classes.query.all()
-        json_data = json.loads("{}")
-        query_student = Students.query.filter_by(user_id=session['user_id']).first()
-        query = db.session.query(Enrollment).all()
-        list_classes_id = []
-        list_classes = []
-        #retrieve all classes for the given student
-        for cls in query_student:
-            list_classes_id.append(cls[0])
-            #list_classes.append([cls[0],cls[1],cls[2]])
-        
-        for i, cls in enumerate(all_classes):
-            count = 0
-            for q in query:
-                if cls[0] == q[0]:
-                    count += 1
-            list_classes[i].append([cls[0],cls[1],cls[2],count])
-        
-        for cls in all_classes:
-            if cls.id in list_classes:
-                inClass = 1
-                index = list_classes.index(cls.id)
-            else:
-                inClass = 0
-            current_teacher = Teachers.query.filter_by(id = cls.teacher_id).first()
-            json_data.update({cls[0]:{"class_name":cls.course_name,"time":cls.day_time, "teacher_name":current_teacher.name, "num_enrolled":list_classes[index][3], 'capacity':cls.capacity, 'registered': inClass}})
-
-        return json_data
+        if 'user_id' in session:
+            query_teacher = Teachers.query.filter_by(user_id=session['user_id']).first()
+            query_classes = Classes.query.filter_by(teacher_id=query_teacher.id).all()
+            query = db.session.query(Enrollment).all()
+            
+            list_classes = []
+            list_class_id = []
+            #retrieve all classes for the given student
+            for cls in query:
+                for q in query_classes:
+                    if cls[0] == q.id:
+                        list_classes.append([cls[0],cls[1],cls[2]])
+                        list_class_id.append(cls[0])
+            json_data = json.loads("{}")
+            
+            #this is calculating the number of students enrolled in 1 class
+            for i, cls in enumerate(list_classes):
+                count = 0
+                for q in query:
+                    if cls[0] == q[0]:
+                        count += 1
+                list_classes[i].append(count)
+                
+            #this is formatting the data to be sent out
+            for cls in query_classes:
+                
+                if cls.id in list_class_id:
+                    index = list_class_id.index(cls.id)
+                    num_enrolled = list_classes[index][3]
+                else:
+                    num_enrolled = 0
+                json_data.update({cls.id:{"class_name":cls.course_name,"time":cls.day_time, "teacher_name":query_teacher.name, "num_enrolled":num_enrolled, 'capacity':cls.capacity}})
+            print(json_data)
+            return json_data
+        return error(400)
 
 api.add_resource(getClasses, '/student/classes')
-api.add_resource(getAllClasses, '/student/all_classes')
+api.add_resource(getTeacherClasses, '/teacher/classes')
+# api.add_resource(getAllClasses, '/student/all_classes')
 
 # assume no user if there is in session then get user g.user for now did only student but have to add teacher also this g.user is used in student html to get name
 @app.before_request
@@ -177,6 +187,8 @@ def before_request():
     g.user = None
     if 'user_id' in session:
         query = Students.query.filter_by(user_id=session['user_id']).first()
+        if query is None:
+            query = Teachers.query.filter_by(user_id=session['user_id']).first()
         g.user = query
         
         
@@ -187,18 +199,57 @@ def student_logged():
         return redirect(url_for('login_post'))
     return render_template('student.html')
 
+@app.route('/teacher')
+def teacher_logged():
+    if not g.user:
+        return redirect(url_for('login_post'))
+    return render_template('teacher.html')
+
+
+
+@app.route('/teacher/student_grades/<id>')
+def edit_grades(id):
+    print(id)
+    if not g.user:
+        return redirect(url_for('login_post'))
+    return render_template('test.html')
+
+@app.route('/teacher/student_get_grades/<id>')
+def edit_get_grades(id):
+    query = db.session.query(Enrollment).all()
+    data=[]
+
+    for q in query:
+        if q[0] == int(id):
+            print(q, q[0], id)
+            data.append([q[0],q[1],q[2]])
+    json_data = json.loads("{}")
+
+    for i, cls in enumerate(data):
+        student = Students.query.filter_by(id=cls[1]).first()
+        print(student)
+        json_data.update({i:{"student_name": student.name, "grade":cls[2]}})
+    print(json_data)
+    return json_data
+
 @app.route('/login', methods=['GET', 'POST'])
 def login_post():
     if request.method == 'POST':
         session.pop('user_id',None)
         username = request.form['username']
         password = request.form['password']
-        query = Users.query.filter_by(username=username).first()
-        if query is not None:
-            if password == query.password:
-                session['user_id'] = query.id
-                # query = Students.query.filter_by(user_id=query.id).first()
-                print(session['user_id'])
+        query_user = Users.query.filter_by(username=username).first()
+        if query_user is not None:
+            if password == query_user.password:
+                session['user_id'] = query_user.id
+                
+                query = Students.query.filter_by(user_id=query_user.id).first()
+                isTeacher = False
+                if query == None:
+                    query = Teachers.query.filter_by(user_id=query_user.id).first()
+                    isTeacher = True
+                if isTeacher:
+                    return redirect(url_for('teacher_logged'))
                 return redirect(url_for('student_logged'))
                 # return render_template('student.html')
             else:

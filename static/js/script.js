@@ -29,36 +29,64 @@ function currClasses() {
     };
 }
 
-function allClasses() {
-    console.log("hellddddo");
-
+function getTeacherClasses() {
     const xhttp = new XMLHttpRequest();
     const method = "GET";
-    const url = "http://127.0.0.1:5000/student/all_classes";
+    const url = "http://127.0.0.1:5000/teacher/classes";
     const async = true;
     xhttp.open(method, url, async);
     xhttp.send();
     xhttp.onload = function() {
-        //const html = JSON.parse(this.responseText);
-        console.log("hll");
-        // let text =
-        //     "<table><tr><th>Course Name</th><th>Teacher</th><th>Time</th><th>Students Enrolled</th></tr>";
-        // for (key in html) {
-        //     text +=
-        //         "<tr><td>" +
-        //         html[key]["class_name"] +
-        //         "</td><td>" +
-        //         html[key]["teacher_name"] +
-        //         "</td><td>" +
-        //         html[key]["time"] +
-        //         "</td><td>" +
-        //         html[key]["num_enrolled"] +
-        //         "/" +
-        //         html[key]["capacity"] +
-        //         "</td></tr>";
-        // }
-        // text += "</table>";
+        const html = JSON.parse(this.responseText);
+        console.log(html);
+        let text =
+            "<table><tr><th>Course Name</th><th>Teacher</th><th>Time</th><th>Students Enrolled</th></tr>";
+        for (key in html) {
+            console.log(key);
+            text +=
+                "<tr><td>" +
+                "<a href='/teacher/student_get_grades/" +
+                key +
+                "'>" +
+                html[key]["class_name"] +
+                "</a>" +
+                "</td><td>" +
+                html[key]["teacher_name"] +
+                "</td><td>" +
+                html[key]["time"] +
+                "</td><td>" +
+                html[key]["num_enrolled"] +
+                "/" +
+                html[key]["capacity"] +
+                "</td></tr>";
+        }
+        text += "</table>";
 
-        // document.getElementById("currentClasses").innerHTML = text;
+        document.getElementById("currentClasses").innerHTML = text;
     };
 }
+
+// function getGrades() {
+//     const xhttp = new XMLHttpRequest();
+//     const method = "GET";
+//     const url = "http://127.0.0.1:5000/teacher/student_get_grades/<id>";
+//     const async = true;
+//     xhttp.open(method, url, async);
+//     xhttp.send();
+//     xhttp.onload = function() {
+//         const html = JSON.parse(this.responseText);
+//         let text = "<table><tr><th>Student Name</th><th>Grade</th></tr>";
+//         for (key in html) {
+//             console.log(key);
+//             text +=
+//                 "<tr><td>" +
+//                 html[key]["student_name"] +
+//                 "</td><td>" +
+//                 html[key]["grade"] +
+//                 "</td></tr>";
+//         }
+//         text += "</table>";
+
+//         document.getElementById("currentStudents").innerHTML = text;
+//     };
+// }

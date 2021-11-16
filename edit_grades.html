@@ -8,15 +8,14 @@
     <h1 id="login-header">EMCA University</h1>
     <p id="login-header">Welcome {{g.user.name}} !</p>
     <a href="/my-link/">Logout</a>
-    <link rel="stylesheet" href="static/styles/login-page.css" />
-    <script src="static/js/script.js"></script>
+    <link rel="stylesheet" href="./static/styles/login-page.css" />
+    <script src="./static/js/script.js"></script>
 </head>
 <!-- {{g.user.name}} -->
 
 <body>
     <ul class="tabs">
         <li data-tab-target="#home" class="active tab">Your Courses</li>
-        <li data-tab-target="#pricing" class="tab">Add Courses</li>
     </ul>
 
     <div class="tab-content">
@@ -63,7 +62,7 @@
 <script>
     const tabs = document.querySelectorAll("[data-tab-target]");
     const tabContents = document.querySelectorAll("[data-tab-content]");
-    allClasses();
+
     tabs.forEach((tab) => {
         tab.addEventListener("click", () => {
             const target = document.querySelector(tab.dataset.tabTarget);
@@ -80,7 +79,7 @@
 </script>
 <script>
     window.onload = function() {
-        currClasses();
+        getGrades();
     };
 </script>
 

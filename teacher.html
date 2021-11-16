@@ -14,11 +14,8 @@
 <!-- {{g.user.name}} -->
 
 <body>
-    <ul class="tabs">
-        <li data-tab-target="#home" class="active tab">Your Courses</li>
-        <li data-tab-target="#pricing" class="tab">Add Courses</li>
-    </ul>
-
+    <ul class="tabs"></ul>
+    <!-- <a href="/teacher/student_grades/69">Logou111t</a> -->
     <div class="tab-content">
         <div id="home" data-tab-content class="active">
             <p id="currentClasses"></p>
@@ -63,7 +60,6 @@
 <script>
     const tabs = document.querySelectorAll("[data-tab-target]");
     const tabContents = document.querySelectorAll("[data-tab-content]");
-    allClasses();
     tabs.forEach((tab) => {
         tab.addEventListener("click", () => {
             const target = document.querySelector(tab.dataset.tabTarget);
@@ -80,7 +76,7 @@
 </script>
 <script>
     window.onload = function() {
-        currClasses();
+        getTeacherClasses();
     };
 </script>
 
