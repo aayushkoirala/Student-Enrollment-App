@@ -78,18 +78,47 @@ function getGrades(class_id) {
     xhttp.onload = function() {
         console.log(this.responseText);
         const html = JSON.parse(this.responseText);
-        let text = "<table><tr><th>Student Name</th><th>Grade</th></tr>";
+        let text =
+            "<table id='students'><tr><th>Student Name</th><th>Grade</th></tr>";
         for (key in html) {
             console.log(key);
             text +=
-                "<tr><td>" +
+                "<tr><td name='name'>" +
                 html[key]["student_name"] +
                 "</td><td>" +
+                "<input type='text' name='grade_values' value=" +
                 html[key]["grade"] +
+                ">" +
                 "</td></tr>";
         }
         text += "</table>";
         console.log(text);
         document.getElementById("currentStudents").innerHTML = text;
     };
+}
+
+function updateDB() {
+    var input = document.getElementsByName("grade_values");
+    var table = document.getElementById("students");
+    var student = [];
+    var student_grade = [];
+    for (var r = 1, n = table.rows.length; r < n; r++) {
+        student.push(table.rows[r].cells[0].innerHTML);
+    }
+    for (var i = 0; i < input.length; i++) {
+        var a = input[i];
+        student_grade.push(a.value);
+    }
+    var json_data = new Object();
+    for (var i = 0; i < student_grade.length; i++) {
+        json_data[student[i]] = student_grade[i];
+    }
+    const xhttp = new XMLHttpRequest();
+    const method = "PUT";
+
+    const url = "http://127.0.0.1:5000/update_grades";
+    const async = true;
+    xhttp.open(method, url, async);
+    console.log(json_data);
+    xhttp.send(JSON.stringify(json_data));
 }

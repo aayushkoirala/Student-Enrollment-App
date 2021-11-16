@@ -45,12 +45,21 @@ Enrollment = db.Table('Enrollment',
                         db.Column('student_id', db.Integer, db.ForeignKey('students.id')),
                         db.Column('grade', db.Integer)
                         )
+
+# class Association(db.Model):
+#     __tablename__ = 'association'
+#     left_id = db.Column(db.ForeignKey('classes.id'), primary_key=True)
+#     right_id = db.Column(db.ForeignKey('students.id'), primary_key=True)
+#     grade = db.Column(db.Integer)
+#     child = db.relationship("Students", back_populates="parents")
+#     parent = db.relationship("Classes", back_populates="children")
 class Students(db.Model):
     __tablename__='students'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), unique=True, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     classes = db.relationship('Classes',secondary=Enrollment)
+    #parents = db.relationship("Association", back_populates="child")
     def __repr__(self) -> str:
         return '<User %r>' % self.name
 
@@ -65,6 +74,7 @@ class Classes(db.Model):
     day_time = db.Column(db.String(80), unique=False, nullable=False)
     #handles many to many
     students = db.relationship('Students',secondary=Enrollment)
+    #children = db.relationship("Association", back_populates="parent")
     
     def __repr__(self) -> str:
         return '<User %r>' % self.course_name
@@ -99,18 +109,40 @@ db.session.add(class2)
 db.session.add(class3)
 db.session.commit()
 
-enrolled1 = Enrollment.insert().values(class_id=class1.id, student_id=student.id, grade=96)
-db.session.execute(enrolled1)
-db.session.commit()
+# enrolled1 = Association(grade=96)
+# enrolled1.child = student1
+# class1.children.append(enrolled1)
+# db.session.execute(enrolled1)
+# db.session.commit()
 enrolled3 = Enrollment.insert().values(class_id=class1.id, student_id=student1.id, grade=100)
 db.session.execute(enrolled3)
 db.session.commit()
 enrolled2 = Enrollment.insert().values(class_id=class2.id, student_id=student1.id, grade=97)
 db.session.execute(enrolled2)
 db.session.commit()
-# enrolled5 = Enrollment.insert().values(class_id=class2.id, student_id=student.id, grade=97)
-# db.session.execute(enrolled5)
-# db.session.commit()
+enrolled5 = Enrollment.insert().values(class_id=class2.id, student_id=student.id, grade=97)
+db.session.execute(enrolled5)
+db.session.commit()
+
+class updateDB(Resource):
+    def put(self):
+        # json_data = json.dumps(request.json.keys())
+        # # print(json_data)
+        json_data = request.data
+        # to double quotes to make it valid JSON
+        my_json = json_data.decode('utf8').replace("'", '"')
+        print(my_json)
+        print('- ' * 20)
+
+        # Load the JSON to a Python list & dump it back out as formatted JSON
+        data = json.loads(my_json)
+        s = json.dumps(data, indent=4, sort_keys=True)
+        json_data = json.loads(s)
+        for name in json_data:
+            query_student = Students.query.filter_by(name=name).first()
+            #query = db.session.query(Enrollment).get(query_student.id)
+            
+            
 class getClasses(Resource):
     def get(self):
         if 'user_id' in session:
@@ -179,7 +211,7 @@ class getTeacherClasses(Resource):
 
 api.add_resource(getClasses, '/student/classes')
 api.add_resource(getTeacherClasses, '/teacher/classes')
-# api.add_resource(getAllClasses, '/student/all_classes')
+api.add_resource(updateDB, '/update_grades')
 
 # assume no user if there is in session then get user g.user for now did only student but have to add teacher also this g.user is used in student html to get name
 @app.before_request
