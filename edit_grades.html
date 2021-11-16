@@ -8,53 +8,22 @@
     <h1 id="login-header">EMCA University</h1>
     <p id="login-header">Welcome {{g.user.name}} !</p>
     <a href="/my-link/">Logout</a>
-    <link rel="stylesheet" href="./static/styles/login-page.css" />
-    <script src="./static/js/script.js"></script>
+    <link rel="stylesheet" href="../static/styles/login-page.css" />
+    <script src="../static/js/script.js"></script>
 </head>
 <!-- {{g.user.name}} -->
 
 <body>
     <ul class="tabs">
-        <li data-tab-target="#home" class="active tab">Your Courses</li>
+        <li data-tab-target="#home" class="active tab">Your Students</li>
     </ul>
 
     <div class="tab-content">
         <div id="home" data-tab-content class="active">
-            <p id="currentClasses"></p>
+            <p id="currentStudents"></p>
         </div>
         <div id="pricing" data-tab-content>
-            <table>
-                <tr>
-                    <th>Course Name</th>
-                    <th>Teacher</th>
-                    <th>Time</th>
-                    <th>Students Enrolled</th>
-                </tr>
-                <tr>
-                    <td>Alfreds Futterkiste</td>
-                    <td>Maria Anders</td>
-                    <td>Germany</td>
-                    <td>joo</td>
-                </tr>
-                <tr>
-                    <td>Centro comercial Moctezuma</td>
-                    <td>Francisco Chang</td>
-                    <td>Mexico</td>
-                    <td>kldjfkldj</td>
-                </tr>
-                <tr>
-                    <td>Centro comercial Moctezuma</td>
-                    <td>Francisco Chang</td>
-                    <td>Mexico</td>
-                    <td>kldjfkldj</td>
-                </tr>
-                <tr>
-                    <td>Centro comercial Moctezuma</td>
-                    <td>Francisco Chang</td>
-                    <td>Mexico</td>
-                    <td>kldjfkldj</td>
-                </tr>
-            </table>
+            <input id="data" type="text" value="{{id}}" />
         </div>
     </div>
 </body>
@@ -79,7 +48,8 @@
 </script>
 <script>
     window.onload = function() {
-        getGrades();
+        let x = document.getElementById("data").value;
+        getGrades(x);
     };
 </script>
 

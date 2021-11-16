@@ -207,18 +207,18 @@ def teacher_logged():
 
 
 
-@app.route('/teacher/student_grades/<id>')
+@app.route('/student_grades/<id>')
 def edit_grades(id):
     print(id)
     if not g.user:
         return redirect(url_for('login_post'))
-    return render_template('test.html')
+    return render_template(f'edit_grades.html', id=id)
 
-@app.route('/teacher/student_get_grades/<id>')
+@app.route('/student_get_grades/<id>')
 def edit_get_grades(id):
     query = db.session.query(Enrollment).all()
     data=[]
-
+    print(id)
     for q in query:
         if q[0] == int(id):
             print(q, q[0], id)
