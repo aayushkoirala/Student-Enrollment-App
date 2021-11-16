@@ -139,7 +139,34 @@ class getClasses(Resource):
 
 class getAllClasses(Resource):
     def get(self):
-        return 'help'
+        all_classes = Classes.query.all()
+        json_data = json.loads("{}")
+        query_student = Students.query.filter_by(user_id=session['user_id']).first()
+        query = db.session.query(Enrollment).all()
+        list_classes_id = []
+        list_classes = []
+        #retrieve all classes for the given student
+        for cls in query_student:
+            list_classes_id.append(cls[0])
+            #list_classes.append([cls[0],cls[1],cls[2]])
+        
+        for i, cls in enumerate(all_classes):
+            count = 0
+            for q in query:
+                if cls[0] == q[0]:
+                    count += 1
+            list_classes[i].append([cls[0],cls[1],cls[2],count])
+        
+        for cls in all_classes:
+            if cls.id in list_classes:
+                inClass = 1
+                index = list_classes.index(cls.id)
+            else:
+                inClass = 0
+            current_teacher = Teachers.query.filter_by(id = cls.teacher_id).first()
+            json_data.update({cls[0]:{"class_name":cls.course_name,"time":cls.day_time, "teacher_name":current_teacher.name, "num_enrolled":list_classes[index][3], 'capacity':cls.capacity, 'registered': inClass}})
+
+        return json_data
 
 api.add_resource(getClasses, '/student/classes')
 api.add_resource(getAllClasses, '/student/all_classes')

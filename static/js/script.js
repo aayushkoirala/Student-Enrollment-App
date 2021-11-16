@@ -39,8 +39,8 @@ function allClasses() {
     xhttp.open(method, url, async);
     xhttp.send();
     xhttp.onload = function() {
-        const html = JSON.parse(this.responseText);
-        console.log(html);
+        //const html = JSON.parse(this.responseText);
+        console.log("hll");
         // let text =
         //     "<table><tr><th>Course Name</th><th>Teacher</th><th>Time</th><th>Students Enrolled</th></tr>";
         // for (key in html) {
