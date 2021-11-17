@@ -179,8 +179,8 @@ class updateDB(Resource):
             query_student = Students.query.filter_by(name=name).first()
 
             query = Enrollment_table.query.filter_by(
-                student_id=query_student.id).first()
-
+                student_id=query_student.id, class_id=json_data['class_id']).first()
+            print(query.class_id, query.student_id)
             query.grade = json_data['student'][name]
             db.session.commit()
 
