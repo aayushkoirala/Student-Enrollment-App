@@ -2,6 +2,8 @@ from distutils.log import error
 from enum import unique
 from flask import Flask, render_template, jsonify, request, redirect,session,g
 from flask_restful import Api, Resource
+from flask_admin import Admin
+from flask_admin.contrib.sqla import ModelView
 import json
 
 from flask.helpers import url_for
@@ -11,7 +13,7 @@ app = Flask(__name__, template_folder='.')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite'
 db = SQLAlchemy(app)
 api = Api(app)
-
+admin = Admin(app)
 # secret key requried for sessions
 app.secret_key = 'TEAM106'
 
@@ -28,7 +30,8 @@ class Users(db.Model):
     
     def __repr__(self) -> str:
         return '<User %r>' % self.username
-
+    
+# admin.add_view(ModelView(Users, db.session))
 class Teachers(db.Model):
     __tablename__='teachers'
     id = db.Column(db.Integer, primary_key=True)
@@ -76,6 +79,12 @@ class Classes(db.Model):
     
     def __repr__(self) -> str:
         return '<User %r>' % self.course_name
+
+# admin.add_view(ModelView(Classes, db.session))
+# admin.add_view(ModelView(Students, db.session))
+# admin.add_view(ModelView(Enrollment_table, db.session))
+# admin.add_view(ModelView(Teachers, db.session))
+# admin.add_view(ModelView(Users, db.session))
 
 
 db.drop_all()
@@ -131,6 +140,12 @@ db.session.commit()
 enr3 = Enrollment_table(id=3, class_id=class3.id, student_id=student.id, grade= 75)
 db.session.add(enr3)
 db.session.commit()
+
+admin.add_view(ModelView(Classes, db.session))
+admin.add_view(ModelView(Students, db.session))
+admin.add_view(ModelView(Enrollment_table, db.session))
+admin.add_view(ModelView(Teachers, db.session))
+admin.add_view(ModelView(Users, db.session))
 
 class updateDB(Resource):
     def put(self):
@@ -224,6 +239,8 @@ class getTeacherClasses(Resource):
             return json_data
         return error(400)
 
+
+
 api.add_resource(getClasses, '/student/classes')
 api.add_resource(getTeacherClasses, '/teacher/classes')
 api.add_resource(updateDB, '/update_grades')
@@ -245,6 +262,8 @@ def student_logged():
     if not g.user:
         return redirect(url_for('login_post'))
     return render_template('student.html')
+
+
 
 @app.route('/teacher')
 def teacher_logged():
