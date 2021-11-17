@@ -208,13 +208,14 @@ class updateDB(Resource):
 
 class addCourse(Resource):
     def post(self):
-        json_data = request.data
+        json_data = json.loads(request.data)
         course = json_data["class_id"]
         query_student = Students.query.filter_by(user_id=session['user_id']).first()
         current_cls = Classes.query.filter_by(course_name=course).first()
         enrolled1 = Enrollment_table.insert().values(class_id=current_cls.id, student_id=query_student.id, grade=0)
         db.session.execute(enrolled1)
         db.session.commit()
+        return 200
 
 class getClasses(Resource):
     def get(self):
@@ -287,8 +288,6 @@ class getTeacherClasses(Resource):
             return json_data
         return error(400)
 
-
-addCourse
 api.add_resource(getClasses, '/student/classes')
 api.add_resource(getTeacherClasses, '/teacher/classes')
 api.add_resource(updateDB, '/update_grades')
