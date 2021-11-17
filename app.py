@@ -212,8 +212,8 @@ class addCourse(Resource):
         course = json_data["class_id"]
         query_student = Students.query.filter_by(user_id=session['user_id']).first()
         current_cls = Classes.query.filter_by(course_name=course).first()
-        enrolled1 = Enrollment_table.insert().values(class_id=current_cls.id, student_id=query_student.id, grade=0)
-        db.session.execute(enrolled1)
+        enrolled1 = Enrollment_table(class_id=current_cls.id, student_id=query_student.id, grade=0)
+        db.session.add(enrolled1)
         db.session.commit()
         return 200
 
