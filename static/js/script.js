@@ -51,7 +51,7 @@ function potentialClasses(){
         let text =
             "<table><tr><th>Course Name</th><th>Teacher</th><th>Time</th><th>Students Enrolled</th><th>Add Course</th></tr>";
         for (key in html) {
-            
+            console.log(key)
             
             if(html[key]["addable"] === 1)
             {
@@ -60,12 +60,12 @@ function potentialClasses(){
             // document.body.appendChild(btn);
            
             text +=
-                "<tr><td id='potenta'>" + 
+                "<tr><td id='potenta" + key +"'>" + 
                 html[key]["class_name"] +"</td><td>" +
                 html[key]["teacher_name"] +"</td><td>" +
                 html[key]["time"] +"</td><td>" +
                 html[key]["num_enrolled"] +"/" + html[key]["capacity"] +
-                "</td><td>" + "<button id='addUsers' onclick='addUsers()'>+</button>"+"</td></tr>";
+                "</td><td>" + "<button id='addUsers' onclick='addUsers(potenta" + key + ")'>+</button>"+"</td></tr>";
             }
 
             if(html[key]["addable"] === 0)
@@ -86,6 +86,11 @@ function potentialClasses(){
         document.getElementById("potentialClasses").innerHTML = text;
     };
 }
+
+function addUsers(potenta){
+    console.log(potenta.innerHTML)
+}
+
 
 function getTeacherClasses() {
     const xhttp = new XMLHttpRequest();
@@ -123,6 +128,7 @@ function getTeacherClasses() {
         document.getElementById("currentClasses").innerHTML = text;
     };
 }
+
 
 function getGrades(class_id) {
     console.log(class_id);
