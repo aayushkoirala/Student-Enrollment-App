@@ -156,7 +156,10 @@ db.session.commit()
 
 class SecureModelView(ModelView):
     def is_accessible(self):
-        return session['user_id']==Users.query.filter_by(id=1).first().id
+        try: 
+            return session['user_id']==Users.query.filter_by(id=1).first().id
+        except:
+            return False
     
     
 admin.add_view(SecureModelView(Classes, db.session))
