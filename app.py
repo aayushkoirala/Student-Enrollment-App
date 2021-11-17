@@ -45,23 +45,16 @@ Enrollment = db.Table('Enrollment',
                         db.Column('student_id', db.Integer, db.ForeignKey('students.id')),
                         db.Column('grade', db.Integer)
                         )
-# class Enrollment(db.Model):
-#     __tablename__='enrollment'
-#     id = db.Column(db.Integer, primary_key=True)
-#     class_id = db.Column('class_id', db.Integer, db.ForeignKey('classes.id')),
-#     student_id = db.Column('student_id', db.Integer, db.ForeignKey('students.id'))
-#     #handles 1 to many
-#     classes = db.relationship('Classes', backref='enrollment')
+class Enrollment_table(db.Model):
+    __tablename__='enrollment_table'
+    id = db.Column(db.Integer, primary_key=True)
+    class_id = db.Column('class_id', db.Integer)
+    student_id = db.Column('student_id', db.Integer)
+    grade = db.Column('grade', db.Integer)
     
     def __repr__(self) -> str:
         return '<User %r>' % self.id
-# class Association(db.Model):
-#     __tablename__ = 'association'
-#     left_id = db.Column(db.ForeignKey('classes.id'), primary_key=True)
-#     right_id = db.Column(db.ForeignKey('students.id'), primary_key=True)
-#     grade = db.Column(db.Integer)
-#     child = db.relationship("Students", back_populates="parents")
-#     parent = db.relationship("Classes", back_populates="children")
+
 class Students(db.Model):
     __tablename__='students'
     id = db.Column(db.Integer, primary_key=True)
@@ -118,6 +111,16 @@ db.session.add(class2)
 db.session.add(class3)
 db.session.commit()
 
+enrl = Enrollment_table(id=899, class_id=class1.id, student_id=student.id, grade= 34)
+db.session.add(enrl)
+db.session.commit()
+enr2 = Enrollment_table(id=900, class_id=class2.id, student_id=student.id, grade= 55)
+db.session.add(enr2)
+db.session.commit()
+enr3 = Enrollment_table(id=819, class_id=class2.id, student_id=student1.id, grade= 75)
+db.session.add(enr3)
+db.session.commit()
+
 # enrolled1 = Association(grade=96)
 # enrolled1.child = student1
 # class1.children.append(enrolled1)
@@ -149,26 +152,31 @@ class updateDB(Resource):
         json_data = json.loads(s)
         for name in json_data:
             query_student = Students.query.filter_by(name=name).first()
-            #query = db.session.query(Enrollment).get(query_student.id)
+            query = Enrollment_table.query.filter_by(student_id=query_student.id).first()
+            query.grade = json_data[name]
+            db.session.commit()
+            
             
             
 class getClasses(Resource):
     def get(self):
         if 'user_id' in session:
             query_student = Students.query.filter_by(user_id=session['user_id']).first()
-            query = db.session.query(Enrollment).all()
+            
+            query = Enrollment_table.query.all()
             list_classes = []
             #retrieve all classes for the given student
             for cls in query:
-                if cls[1] == query_student.id:
-                    list_classes.append([cls[0],cls[1],cls[2]])
+                if cls.student_id == query_student.id:
+                    list_classes.append([cls.class_id,cls.student_id,cls.grade])
             json_data = json.loads("{}")
 
             #this is calculating the number of students enrolled in 1 class
+            
             for i, cls in enumerate(list_classes):
                 count = 0
                 for q in query:
-                    if cls[0] == q[0]:
+                    if cls[0] == q.class_id:
                         count += 1
                 list_classes[i].append(count)
             #this is formatting the data to be sent out
@@ -185,23 +193,29 @@ class getTeacherClasses(Resource):
         if 'user_id' in session:
             query_teacher = Teachers.query.filter_by(user_id=session['user_id']).first()
             query_classes = Classes.query.filter_by(teacher_id=query_teacher.id).all()
-            query = db.session.query(Enrollment).all()
+            query = Enrollment_table.query.all()
             
             list_classes = []
             list_class_id = []
             #retrieve all classes for the given student
             for cls in query:
                 for q in query_classes:
-                    if cls[0] == q.id:
-                        list_classes.append([cls[0],cls[1],cls[2]])
-                        list_class_id.append(cls[0])
+                    if cls.class_id == q.id:
+                        list_classes.append([cls.class_id,cls.student_id,cls.grade])
+                        list_class_id.append(cls.class_id)
             json_data = json.loads("{}")
             
             #this is calculating the number of students enrolled in 1 class
+            print(list_classes)
             for i, cls in enumerate(list_classes):
                 count = 0
                 for q in query:
-                    if cls[0] == q[0]:
+                    x = cls[0]
+                    y = q.id
+                    passing = int(x) == int(y)
+                    print(cls[0], q.class_id, passing)
+                    if cls[0] == q.id:
+                        print(cls[0], q.class_id)
                         count += 1
                 list_classes[i].append(count)
                 
@@ -258,14 +272,16 @@ def edit_grades(id):
 @app.route('/student_get_grades/<id>')
 def edit_get_grades(id):
     query = db.session.query(Enrollment).all()
+    query = Enrollment_table.query.all()
     data=[]
     print(id)
+    print(query)
     for q in query:
-        if q[0] == int(id):
-            print(q, q[0], id)
-            data.append([q[0],q[1],q[2]])
+        if q.class_id == int(id):
+            #print(q, q[0], id)
+            data.append([q.class_id,q.student_id,q.grade])
     json_data = json.loads("{}")
-
+    print(data)
     for i, cls in enumerate(data):
         student = Students.query.filter_by(id=cls[1]).first()
         print(student)
