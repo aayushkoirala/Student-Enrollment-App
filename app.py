@@ -2,6 +2,8 @@ from distutils.log import error
 from enum import unique
 from flask import Flask, render_template, jsonify, request, redirect, session, g
 from flask_restful import Api, Resource
+from flask_admin import Admin
+from flask_admin.contrib.sqla import ModelView
 import json
 
 from flask.helpers import url_for
@@ -11,7 +13,7 @@ app = Flask(__name__, template_folder='.')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite'
 db = SQLAlchemy(app)
 api = Api(app)
-
+admin = Admin(app)
 # secret key requried for sessions
 app.secret_key = 'TEAM106'
 
@@ -28,7 +30,6 @@ class Users(db.Model):
 
     def __repr__(self) -> str:
         return '<User %r>' % self.username
-
 
 class Teachers(db.Model):
     __tablename__ = 'teachers'
@@ -79,6 +80,12 @@ class Classes(db.Model):
 
     def __repr__(self) -> str:
         return '<User %r>' % self.course_name
+
+# admin.add_view(ModelView(Classes, db.session))
+# admin.add_view(ModelView(Students, db.session))
+# admin.add_view(ModelView(Enrollment_table, db.session))
+# admin.add_view(ModelView(Teachers, db.session))
+# admin.add_view(ModelView(Users, db.session))
 
 
 db.drop_all()
@@ -145,6 +152,13 @@ db.session.add(enr3)
 db.session.commit()
 
 
+admin.add_view(ModelView(Classes, db.session))
+admin.add_view(ModelView(Students, db.session))
+admin.add_view(ModelView(Enrollment_table, db.session))
+admin.add_view(ModelView(Teachers, db.session))
+admin.add_view(ModelView(Users, db.session))
+
+
 class updateDB(Resource):
     def put(self):
         # json_data = json.dumps(request.json.keys())
@@ -200,7 +214,7 @@ class getClasses(Resource):
                 current_teacher = Teachers.query.filter_by(
                     id=current_cls.teacher_id).first()
                 json_data.update({cls[0]: {"class_name": current_cls.course_name, "time": current_cls.day_time,
-                                 "teacher_name": current_teacher.name, "num_enrolled": cls[3], 'capacity': current_cls.capacity}})
+                                "teacher_name": current_teacher.name, "num_enrolled": cls[3], 'capacity': current_cls.capacity}})
 
             return json_data
         return error(400)
@@ -242,9 +256,10 @@ class getTeacherClasses(Resource):
                 else:
                     num_enrolled = 0
                 json_data.update({cls.id: {"class_name": cls.course_name, "time": cls.day_time,
-                                 "teacher_name": query_teacher.name, "num_enrolled": num_enrolled, 'capacity': cls.capacity}})
+                                "teacher_name": query_teacher.name, "num_enrolled": num_enrolled, 'capacity': cls.capacity}})
             return json_data
         return error(400)
+
 
 
 api.add_resource(getClasses, '/student/classes')
@@ -271,6 +286,7 @@ def student_logged():
     if not g.user:
         return redirect(url_for('login_post'))
     return render_template('student.html')
+
 
 
 @app.route('/teacher')
