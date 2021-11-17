@@ -40,11 +40,7 @@ class Teachers(db.Model):
     def __repr__(self) -> str:
         return '<User %r>' % self.name
     
-Enrollment = db.Table('Enrollment',
-                        db.Column('class_id', db.Integer, db.ForeignKey('classes.id')),
-                        db.Column('student_id', db.Integer, db.ForeignKey('students.id')),
-                        db.Column('grade', db.Integer)
-                        )
+
 class Enrollment_table(db.Model):
     __tablename__='enrollment_table'
     id = db.Column(db.Integer, primary_key=True)
@@ -60,7 +56,7 @@ class Students(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), unique=True, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    classes = db.relationship('Classes',secondary=Enrollment)
+    #classes = db.relationship('Classes',secondary=Enrollment)
     #parents = db.relationship("Association", back_populates="child")
     def __repr__(self) -> str:
         return '<User %r>' % self.name
@@ -75,7 +71,7 @@ class Classes(db.Model):
     capacity = db.Column(db.Integer, unique=False, nullable=False)
     day_time = db.Column(db.String(80), unique=False, nullable=False)
     #handles many to many
-    students = db.relationship('Students',secondary=Enrollment)
+    #students = db.relationship('Students',secondary=Enrollment)
     #children = db.relationship("Association", back_populates="parent")
     
     def __repr__(self) -> str:
@@ -86,13 +82,18 @@ db.drop_all()
 db.create_all()
 user = Users(id = 1, username='a', password='b')
 user23 = Users(id = 2, username='c', password='d')
+user2 = Users(id = 4, username='b', password='d')
 db.session.add(user)
 db.session.add(user23)
+db.session.add(user2)
 db.session.commit()
 student = Students(id=100, name='Yoan', user_id=user.id)
 db.session.add(student)
 student1 = Students(id=101, name='two', user_id=user23.id)
 db.session.add(student1)
+db.session.commit()
+student99 = Students(id=121, name='josh', user_id=user2.id)
+db.session.add(student99)
 db.session.commit()
 user1 = Users(id=999, username='z', password='d')
 db.session.add(user1)
@@ -114,26 +115,21 @@ db.session.commit()
 enrl = Enrollment_table(id=899, class_id=class1.id, student_id=student.id, grade= 34)
 db.session.add(enrl)
 db.session.commit()
-enr2 = Enrollment_table(id=900, class_id=class2.id, student_id=student.id, grade= 55)
+enr2 = Enrollment_table(id=900, class_id=class2.id, student_id=student99.id, grade= 55)
 db.session.add(enr2)
 db.session.commit()
-enr3 = Enrollment_table(id=819, class_id=class2.id, student_id=student1.id, grade= 75)
+enr3 = Enrollment_table(id=819, class_id=class1.id, student_id=student1.id, grade= 75)
 db.session.add(enr3)
 db.session.commit()
 
-# enrolled1 = Association(grade=96)
-# enrolled1.child = student1
-# class1.children.append(enrolled1)
-# db.session.execute(enrolled1)
-# db.session.commit()
-enrolled3 = Enrollment.insert().values(class_id=class1.id, student_id=student1.id, grade=100)
-db.session.execute(enrolled3)
+enr3 = Enrollment_table(id=1, class_id=class3.id, student_id=student1.id, grade= 75)
+db.session.add(enr3)
 db.session.commit()
-enrolled2 = Enrollment.insert().values(class_id=class2.id, student_id=student1.id, grade=97)
-db.session.execute(enrolled2)
+enr3 = Enrollment_table(id=2, class_id=class3.id, student_id=student99.id, grade= 75)
+db.session.add(enr3)
 db.session.commit()
-enrolled5 = Enrollment.insert().values(class_id=class2.id, student_id=student.id, grade=97)
-db.session.execute(enrolled5)
+enr3 = Enrollment_table(id=3, class_id=class3.id, student_id=student.id, grade= 75)
+db.session.add(enr3)
 db.session.commit()
 
 class updateDB(Resource):
@@ -143,6 +139,7 @@ class updateDB(Resource):
         json_data = request.data
         # to double quotes to make it valid JSON
         my_json = json_data.decode('utf8').replace("'", '"')
+        print("HEREARAERAESRS")
         print(my_json)
         print('- ' * 20)
 
@@ -150,10 +147,13 @@ class updateDB(Resource):
         data = json.loads(my_json)
         s = json.dumps(data, indent=4, sort_keys=True)
         json_data = json.loads(s)
-        for name in json_data:
+
+        for name in json_data['student']:
             query_student = Students.query.filter_by(name=name).first()
+            print(query_student)
             query = Enrollment_table.query.filter_by(student_id=query_student.id).first()
-            query.grade = json_data[name]
+            print(query)
+            query.grade = json_data['student'][name]
             db.session.commit()
             
             
@@ -213,7 +213,7 @@ class getTeacherClasses(Resource):
                     x = cls[0]
                     y = q.id
                     passing = int(x) == int(y)
-                    print(cls[0], q.class_id, passing)
+                    print(id(cls[0]), id(q.class_id), passing)
                     if cls[0] == q.id:
                         print(cls[0], q.class_id)
                         count += 1
@@ -271,7 +271,6 @@ def edit_grades(id):
 
 @app.route('/student_get_grades/<id>')
 def edit_get_grades(id):
-    query = db.session.query(Enrollment).all()
     query = Enrollment_table.query.all()
     data=[]
     print(id)

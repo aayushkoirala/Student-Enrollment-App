@@ -102,6 +102,7 @@ function updateDB() {
     var table = document.getElementById("students");
     var student = [];
     var student_grade = [];
+    let class_id = document.getElementById("data").value;
     for (var r = 1, n = table.rows.length; r < n; r++) {
         student.push(table.rows[r].cells[0].innerHTML);
     }
@@ -110,15 +111,22 @@ function updateDB() {
         student_grade.push(a.value);
     }
     var json_data = new Object();
+
     for (var i = 0; i < student_grade.length; i++) {
         json_data[student[i]] = student_grade[i];
     }
+    const json_datav2 = {
+        student: json_data,
+        class_id: class_id,
+    };
+
     const xhttp = new XMLHttpRequest();
     const method = "PUT";
 
     const url = "http://127.0.0.1:5000/update_grades";
+    console.log(url);
     const async = true;
     xhttp.open(method, url, async);
-    console.log(json_data);
-    xhttp.send(JSON.stringify(json_data));
+    console.log(JSON.stringify(json_datav2));
+    xhttp.send(JSON.stringify(json_datav2));
 }
