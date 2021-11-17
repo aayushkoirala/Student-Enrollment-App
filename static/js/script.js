@@ -29,15 +29,7 @@ function currClasses() {
   };
 }
 
-$("button").click(function () {
-  console.log("Works");
-  const xhttp = new XMLHttpRequest();
-  const method = "GET";
-  const url = "http://127.0.0.1:5000/student/add_course";
-  const async = true;
-  xhttp.open(method, url, async);
-  xhttp.send();
-});
+
 
 function potentialClasses() {
   const xhttp = new XMLHttpRequest();
@@ -106,7 +98,7 @@ function addUsers(potenta) {
 
   const xhttp = new XMLHttpRequest();
   const method = "POST";
-  const url = "http://127.0.0.1:5000/add_classes";
+  const url = "http://127.0.0.1:5000/add_course";
 
   const async = true;
   xhttp.open(method, url, async);

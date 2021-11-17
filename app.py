@@ -148,7 +148,7 @@ class getPotentialClasses(Resource):
 
             for cls in query:
                 if cls[2] == query_student.id:
-                    class_id.append(cls[0])
+                    class_id.append(cls[1])
                     current_classes.append([cls[1],cls[2],cls[3]])
                     json_data = json.loads("{}")
             for cls in query:
@@ -209,13 +209,12 @@ class updateDB(Resource):
 class addCourse(Resource):
     def post(self):
         json_data = request.data
-        # to double quotes to make it valid JSON
-        my_json = json_data.decode('utf8').replace("'", '"')
-
-        # Load the JSON to a Python list & dump it back out as formatted JSON
-        data = json.loads(my_json)
-        s = json.dumps(data, indent=4, sort_keys=True)
-        json_data = json.loads(s)
+        course = json_data["class_id"]
+        query_student = Students.query.filter_by(user_id=session['user_id']).first()
+        current_cls = Classes.query.filter_by(course_name=course).first()
+        enrolled1 = Enrollment_table.insert().values(class_id=current_cls.id, student_id=query_student.id, grade=0)
+        db.session.execute(enrolled1)
+        db.session.commit()
 
 class getClasses(Resource):
     def get(self):
@@ -287,6 +286,7 @@ class getTeacherClasses(Resource):
                                            "teacher_name": query_teacher.name, "num_enrolled": num_enrolled, 'capacity': cls.capacity}})
             return json_data
         return error(400)
+
 
 addCourse
 api.add_resource(getClasses, '/student/classes')
