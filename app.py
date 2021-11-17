@@ -278,6 +278,7 @@ def edit_get_grades(id):
     
     return json_data
 
+@app.route('/', methods=['GET', 'POST'])
 @app.route('/login', methods=['GET', 'POST'])
 def login_post():
     if request.method == 'POST':
