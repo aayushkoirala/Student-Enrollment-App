@@ -139,8 +139,7 @@ class getPotentialClasses(Resource):
     def get(self):
         if 'user_id' in session:
             query_student = Students.query.filter_by(user_id=session['user_id']).first()
-            #query = db.session.query(Enrollment).all()
-            query = Enrollment_table.query.all()
+            query = db.session.query(Enrollment_table.metadata.tables['enrollment_table']).all()
             class_id = []
             potential_classes = []
             current_classes = []
@@ -148,13 +147,13 @@ class getPotentialClasses(Resource):
             bool_classes = []
 
             for cls in query:
-                if cls.student_id == query_student.id:
-                    class_id.append(cls.class_id)
-                    current_classes.append([cls.class_id, cls.student_id, cls.grade])
+                if cls[2] == query_student.id:
+                    class_id.append(cls[0])
+                    current_classes.append([cls[1],cls[2],cls[3]])
                     json_data = json.loads("{}")
             for cls in query:
-                if cls.student_id != query_student.id and cls.class_id not in class_id:
-                    potential_classes.append([cls.class_id, cls.student_id, cls.grade])
+                if cls[2] != query_student.id and cls[1] not in class_id:
+                    potential_classes.append([cls[1],cls[2],cls[3]])
         # all_classes = db.session.query(Classes.metadata.tables['classes']).all()
         # all_enrollment_classes = db.session.query(Enrollment.metadata.tables['Enrollment']).all()
 
@@ -162,16 +161,24 @@ class getPotentialClasses(Resource):
             for i, cls in enumerate(potential_classes):
                 count = 0
                 for q in query:
-                    if cls[0] == q.class_id:
+                    if cls[0] == q[1]:
                         count += 1
                 potential_classes[i].append(count)
+            for i, cls in enumerate(current_classes):
+                count = 0
+                for q in query:
+                    if cls[0] == q[1]:
+                        count += 1
+                current_classes[i].append(count)
         # this is formatting the data to be sent out
             for cls in potential_classes:
                 potential_cls = Classes.query.filter_by(id=cls[0]).first()
                 potential_teacher = Teachers.query.filter_by(id = potential_cls.teacher_id).first()
                 for cur in current_classes:
                     current_cls = Classes.query.filter_by(id=cur[0]).first()
+                    current_teacher = Teachers.query.filter_by(id = current_cls.teacher_id).first()
                     bool_classes.append(add_class(current_cls.day_time,potential_cls.day_time))
+                    json_data.update({cur[0]:{"class_name":current_cls.course_name,"time":current_cls.day_time, "teacher_name":current_teacher.name, "num_enrolled":cur[3], 'capacity':current_cls.capacity, "addable":0}})
                 if False not in bool_classes and cls[3] < potential_cls.capacity:
                     json_data.update({cls[0]:{"class_name":potential_cls.course_name,"time":potential_cls.day_time, "teacher_name":potential_teacher.name, "num_enrolled":cls[3], 'capacity':potential_cls.capacity, "addable":1}})
                     bool_classes.clear()
