@@ -60,8 +60,6 @@ class Students(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), unique=True, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    #classes = db.relationship('Classes',secondary=Enrollment)
-    #parents = db.relationship("Association", back_populates="child")
 
     def __repr__(self) -> str:
         return '<User %r>' % self.name
@@ -75,84 +73,9 @@ class Classes(db.Model):
     num_enrolled = db.Column(db.Integer, unique=False, nullable=False)
     capacity = db.Column(db.Integer, unique=False, nullable=False)
     day_time = db.Column(db.String(80), unique=False, nullable=False)
-    # handles many to many
-    #students = db.relationship('Students',secondary=Enrollment)
-    #children = db.relationship("Association", back_populates="parent")
 
     def __repr__(self) -> str:
         return '<User %r>' % self.course_name
-
-# admin.add_view(ModelView(Classes, db.session))
-# admin.add_view(ModelView(Students, db.session))
-# admin.add_view(ModelView(Enrollment_table, db.session))
-# admin.add_view(ModelView(Teachers, db.session))
-# admin.add_view(ModelView(Users, db.session))
-
-
-db.drop_all()
-db.create_all()
-admin1 = Users(id=1, username='admin', password='123')
-user = Users(id=3, username='a', password='b')
-user23 = Users(id=2, username='c', password='d')
-user2 = Users(id=4, username='b', password='d')
-db.session.add(user)
-db.session.add(user23)
-db.session.add(user2)
-db.session.add(admin1)
-db.session.commit()
-student = Students(id=100, name='Yoan', user_id=user.id)
-db.session.add(student)
-student1 = Students(id=101, name='two', user_id=user23.id)
-db.session.add(student1)
-db.session.commit()
-student99 = Students(id=121, name='josh', user_id=user2.id)
-db.session.add(student99)
-db.session.commit()
-user1 = Users(id=999, username='z', password='d')
-db.session.add(user1)
-db.session.commit()
-teacher1 = Teachers(id=9, name='Cris', user_id=user1.id)
-db.session.add(teacher1)
-db.session.commit()
-
-class1 = Classes(id=69, course_name='CSE106', teacher=teacher1,
-                 num_enrolled=100, capacity=120, day_time='MWF 1:30-2:30')
-class2 = Classes(id=79, course_name='CSE116', teacher=teacher1,
-                 num_enrolled=100, capacity=120, day_time='MWF 1:30-2:30')
-class3 = Classes(id=89, course_name='CSE126', teacher=teacher1,
-                 num_enrolled=100, capacity=120, day_time='MWF 1:30-2:30')
-# class1.students.append(student)
-# class2.students.append(student1)
-db.session.add(class1)
-db.session.add(class2)
-db.session.add(class3)
-db.session.commit()
-
-enrl = Enrollment_table(id=899, class_id=class1.id,
-                        student_id=student.id, grade=34)
-db.session.add(enrl)
-db.session.commit()
-enr2 = Enrollment_table(id=900, class_id=class2.id,
-                        student_id=student99.id, grade=55)
-db.session.add(enr2)
-db.session.commit()
-enr3 = Enrollment_table(id=819, class_id=class1.id,
-                        student_id=student1.id, grade=75)
-db.session.add(enr3)
-db.session.commit()
-
-enr3 = Enrollment_table(id=1, class_id=class3.id,
-                        student_id=student1.id, grade=75)
-db.session.add(enr3)
-db.session.commit()
-enr3 = Enrollment_table(id=2, class_id=class3.id,
-                        student_id=student99.id, grade=75)
-db.session.add(enr3)
-db.session.commit()
-enr3 = Enrollment_table(id=3, class_id=class3.id,
-                        student_id=student.id, grade=75)
-db.session.add(enr3)
-db.session.commit()
 
 class SecureModelView(ModelView):
     def is_accessible(self):
@@ -171,36 +94,27 @@ admin.add_view(SecureModelView(Users, db.session))
 
 class updateDB(Resource):
     def put(self):
-        # json_data = json.dumps(request.json.keys())
-        # # print(json_data)
         json_data = request.data
         # to double quotes to make it valid JSON
         my_json = json_data.decode('utf8').replace("'", '"')
-        # print("HEREARAERAESRS")
-        # print(my_json)
-        # print('- ' * 20)
 
         # Load the JSON to a Python list & dump it back out as formatted JSON
         data = json.loads(my_json)
         s = json.dumps(data, indent=4, sort_keys=True)
         json_data = json.loads(s)
-
         for name in json_data['student']:
             query_student = Students.query.filter_by(name=name).first()
-
             query = Enrollment_table.query.filter_by(
                 student_id=query_student.id, class_id=json_data['class_id']).first()
             print(query.class_id, query.student_id)
             query.grade = json_data['student'][name]
             db.session.commit()
 
-
 class getClasses(Resource):
     def get(self):
         if 'user_id' in session:
             query_student = Students.query.filter_by(
                 user_id=session['user_id']).first()
-
             query = Enrollment_table.query.all()
             list_classes = []
             # retrieve all classes for the given student
@@ -211,7 +125,6 @@ class getClasses(Resource):
             json_data = json.loads("{}")
 
             # this is calculating the number of students enrolled in 1 class
-
             for i, cls in enumerate(list_classes):
                 count = 0
                 for q in query:
@@ -225,7 +138,6 @@ class getClasses(Resource):
                     id=current_cls.teacher_id).first()
                 json_data.update({cls[0]: {"class_name": current_cls.course_name, "time": current_cls.day_time,
                                 "teacher_name": current_teacher.name, "num_enrolled": cls[3], 'capacity': current_cls.capacity}})
-
             return json_data
         return error(400)
 
@@ -259,7 +171,6 @@ class getTeacherClasses(Resource):
                 list_classes[i].append(count)
             # this is formatting the data to be sent out
             for cls in query_classes:
-
                 if cls.id in list_class_id:
                     index = list_class_id.index(cls.id)
                     num_enrolled = list_classes[index][3]
@@ -308,7 +219,6 @@ def teacher_logged():
 
 @app.route('/student_grades/<id>')
 def edit_grades(id):
-
     if not g.user:
         return redirect(url_for('login_post'))
     return render_template(f'edit_grades.html', id=id)
@@ -320,13 +230,11 @@ def edit_get_grades(id):
     data = []
     for q in query:
         if q.class_id == int(id):
-
             data.append([q.class_id, q.student_id, q.grade])
     json_data = json.loads("{}")
 
     for i, cls in enumerate(data):
         student = Students.query.filter_by(id=cls[1]).first()
-
         json_data.update({i: {"student_name": student.name, "grade": cls[2]}})
 
     return json_data
@@ -355,14 +263,12 @@ def login_post():
                 if isTeacher:
                     return redirect(url_for('teacher_logged'))
                 return redirect(url_for('student_logged'))
-                # return render_template('student.html')
+            
             else:
                 return redirect(url_for('login_post'))
     return render_template('login.html')
 
 # this is to logout the user
-
-
 @app.route('/my-link/')
 def my_link():
     #  pop the user fro the current session then redirect to login
