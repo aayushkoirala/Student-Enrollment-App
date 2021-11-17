@@ -21,7 +21,6 @@ class Users(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password = db.Column(db.String(80), unique=False, nullable=False)
-
     # handles 1 to 1
     teachers = db.relationship("Teachers", backref='users', uselist=False)
     students = db.relationship("Students", backref='users', uselist=False)
