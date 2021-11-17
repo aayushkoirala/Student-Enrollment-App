@@ -90,6 +90,97 @@ admin.add_view(SecureModelView(Enrollment_table, db.session))
 admin.add_view(SecureModelView(Teachers, db.session))
 admin.add_view(SecureModelView(Users, db.session))
 
+def add_class(current_class, potential_class):
+    
+    if(len(current_class) == 18):
+        # print('here')
+        current_class_days = current_class[0:3].strip()
+        current_class_start = current_class[3:9].strip()
+        current_class_end = current_class[10:15].strip()
+        eve_current = current_class[15:].strip()
+    else:
+        current_class_days = current_class[0:3].strip()
+        current_class_start = current_class[2:8].strip()
+        current_class_end = current_class[9:14].strip()
+        eve_current = current_class[14:].strip()
+    if(len(potential_class) == 17):
+        potential_class_days = potential_class[0:3].strip()
+        potential_class_start = potential_class[2:8].strip()
+        potential_class_end = potential_class[9:14].strip()
+        eve_potential = potential_class[14:].strip()
+    else:
+        potential_class_days = potential_class[0:3].strip()
+        potential_class_start = potential_class[3:9].strip()
+        potential_class_end = potential_class[10:15].strip()
+        eve_potential = potential_class[15:].strip()
+
+
+    
+    # print('$$$$$$$$$$$$$$$')
+    # print(current_class_start)
+    # print(potential_class_start)
+    # print(current_class_end)
+    # print(potential_class_end)
+    # print('$$$$$$$$$$$$$$$')
+
+    for char in current_class_days:
+        if char in potential_class_days:
+            if(eve_current != eve_potential):
+                return True
+            else:
+                if(( current_class_start > potential_class_start and current_class_start > potential_class_end )  
+                     or (current_class_start < potential_class_start and current_class_end < potential_class_start)):
+                    return True
+                else:
+                    return False
+    # print('or here')
+    return True
+
+class getPotentialClasses(Resource):
+    def get(self):
+        if 'user_id' in session:
+            query_student = Students.query.filter_by(user_id=session['user_id']).first()
+            #query = db.session.query(Enrollment).all()
+            query = Enrollment_table.query.all()
+            class_id = []
+            potential_classes = []
+            current_classes = []
+
+            bool_classes = []
+
+            for cls in query:
+                if cls.student_id == query_student.id:
+                    class_id.append(cls.class_id)
+                    current_classes.append([cls.class_id, cls.student_id, cls.grade])
+                    json_data = json.loads("{}")
+            for cls in query:
+                if cls.student_id != query_student.id and cls.class_id not in class_id:
+                    potential_classes.append([cls.class_id, cls.student_id, cls.grade])
+        # all_classes = db.session.query(Classes.metadata.tables['classes']).all()
+        # all_enrollment_classes = db.session.query(Enrollment.metadata.tables['Enrollment']).all()
+
+        #this is calculating the number of students enrolled in potential classes
+            for i, cls in enumerate(potential_classes):
+                count = 0
+                for q in query:
+                    if cls[0] == q.class_id:
+                        count += 1
+                potential_classes[i].append(count)
+        # this is formatting the data to be sent out
+            for cls in potential_classes:
+                potential_cls = Classes.query.filter_by(id=cls[0]).first()
+                potential_teacher = Teachers.query.filter_by(id = potential_cls.teacher_id).first()
+                for cur in current_classes:
+                    current_cls = Classes.query.filter_by(id=cur[0]).first()
+                    bool_classes.append(add_class(current_cls.day_time,potential_cls.day_time))
+                if False not in bool_classes and cls[3] < potential_cls.capacity:
+                    json_data.update({cls[0]:{"class_name":potential_cls.course_name,"time":potential_cls.day_time, "teacher_name":potential_teacher.name, "num_enrolled":cls[3], 'capacity':potential_cls.capacity, "addable":1}})
+                    bool_classes.clear()
+                else:
+                    json_data.update({cls[0]:{"class_name":potential_cls.course_name,"time":potential_cls.day_time, "teacher_name":potential_teacher.name, "num_enrolled":cls[3], 'capacity':potential_cls.capacity, "addable":0}})
+                    bool_classes.clear()
+            return json_data
+        return error(400)
 
 class updateDB(Resource):
     def put(self):
@@ -109,6 +200,16 @@ class updateDB(Resource):
             query.grade = json_data['student'][name]
             db.session.commit()
 
+class addCourse(Resource):
+    def post(self):
+        json_data = request.data
+        # to double quotes to make it valid JSON
+        my_json = json_data.decode('utf8').replace("'", '"')
+
+        # Load the JSON to a Python list & dump it back out as formatted JSON
+        data = json.loads(my_json)
+        s = json.dumps(data, indent=4, sort_keys=True)
+        json_data = json.loads(s)
 
 class getClasses(Resource):
     def get(self):
@@ -181,11 +282,12 @@ class getTeacherClasses(Resource):
             return json_data
         return error(400)
 
-
+addCourse
 api.add_resource(getClasses, '/student/classes')
 api.add_resource(getTeacherClasses, '/teacher/classes')
 api.add_resource(updateDB, '/update_grades')
-
+api.add_resource(getPotentialClasses,'/student/potential_classes')
+api.add_resource(addCourse,'/student/add_course')
 # assume no user if there is in session then get user g.user for now did only student but have to add teacher also this g.user is used in student html to get name
 @app.before_request
 def before_request():

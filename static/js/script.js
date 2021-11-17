@@ -29,6 +29,68 @@ function currClasses() {
     };
 }
 
+$("button").click(function() {
+    console.log("Works");
+    const xhttp = new XMLHttpRequest();
+    const method = "GET";
+    const url = "http://127.0.0.1:5000/student/add_course";
+    const async = true;
+    xhttp.open(method, url, async);
+    xhttp.send();
+});
+
+function potentialClasses() {
+    const xhttp = new XMLHttpRequest();
+    const method = "GET";
+    const url = "http://127.0.0.1:5000/student/potential_classes";
+    const async = true;
+    xhttp.open(method, url, async);
+    xhttp.send();
+    xhttp.onload = function() {
+        const html = JSON.parse(this.responseText);
+        let text =
+            "<table><tr><th>Course Name</th><th>Teacher</th><th>Time</th><th>Students Enrolled</th><th>Add Course</th></tr>";
+        for (key in html) {
+            if (html[key]["addable"] === 1) {
+                text +=
+                    "<tr><td id='potenta'>" +
+                    html[key]["class_name"] +
+                    "</td><td>" +
+                    html[key]["teacher_name"] +
+                    "</td><td>" +
+                    html[key]["time"] +
+                    "</td><td>" +
+                    html[key]["num_enrolled"] +
+                    "/" +
+                    html[key]["capacity"] +
+                    "</td><td>" +
+                    "<button id=" +
+                    class_name +
+                    " onClick='test()'>+</button>" +
+                    "</td></tr>";
+            }
+
+            if (html[key]["addable"] === 0) {
+                text +=
+                    "<tr><td>" +
+                    html[key]["class_name"] +
+                    "</td><td>" +
+                    html[key]["teacher_name"] +
+                    "</td><td>" +
+                    html[key]["time"] +
+                    "</td><td>" +
+                    html[key]["num_enrolled"] +
+                    "/" +
+                    html[key]["capacity"] +
+                    "</td><td>" +
+                    "<button>-</button>" +
+                    "</td></tr>";
+            }
+        }
+        text += "</table>";
+    };
+}
+
 function getTeacherClasses() {
     const xhttp = new XMLHttpRequest();
     const method = "GET";

@@ -1,54 +1,57 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Student Home</title>
     <h1 style="color: #f08434">CSE UNIVERSITY</h1>
     <p id="login-header">Welcome <b>{{g.user.name}}</b>!</p>
-    <a href="/my-link/">Logout</a>
-    &nbsp;
+    <a href="/my-link/">Logout</a> &nbsp;
     <link rel="stylesheet" href="static/styles/login-page.css" />
     <script src="static/js/script.js"></script>
-  </head>
+</head>
 
-  <body>
+<body>
     <ul class="tabs">
-      <li data-tab-target="#home" class="active tab">Your Courses</li>
-      <li data-tab-target="#pricing" class="tab">Add Courses</li>
+        <li data-tab-target="#home" class="active tab">Your Courses</li>
+        <li data-tab-target="#pricing" class="tab">Add Courses</li>
     </ul>
 
     <div class="tab-content">
-      <div id="home" data-tab-content class="active">
-        <p id="currentClasses"></p>
-      </div>
-      <div id="pricing" data-tab-content>
-        <table></table>
-      </div>
+        <div id="home" data-tab-content class="active">
+            <p id="currentClasses"></p>
+            <p id="potentialClasses"></p>
+        </div>
+        <div id="pricing" data-tab-content>
+            <!-- <p id="potentialClasses"></p> -->
+        </div>
     </div>
-  </body>
+</body>
 
-  <script>
+<script>
     const tabs = document.querySelectorAll("[data-tab-target]");
     const tabContents = document.querySelectorAll("[data-tab-content]");
-    allClasses();
+    // allClasses();
     tabs.forEach((tab) => {
-      tab.addEventListener("click", () => {
-        const target = document.querySelector(tab.dataset.tabTarget);
-        tabContents.forEach((tabContent) => {
-          tabContent.classList.remove("active");
+        tab.addEventListener("click", () => {
+            const target = document.querySelector(tab.dataset.tabTarget);
+            tabContents.forEach((tabContent) => {
+                tabContent.classList.remove("active");
+            });
+            tabs.forEach((tab) => {
+                tab.classList.remove("active");
+            });
+            tab.classList.add("active");
+            target.classList.add("active");
         });
-        tabs.forEach((tab) => {
-          tab.classList.remove("active");
-        });
-        tab.classList.add("active");
-        target.classList.add("active");
-      });
     });
-  </script>
-  <script>
-    window.onload = function () {
-      currClasses();
+</script>
+<script>
+    window.onload = function() {
+        currClasses();
+        potentialClasses();
     };
-  </script>
+</script>
+
 </html>
