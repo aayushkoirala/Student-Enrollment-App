@@ -7,7 +7,7 @@ from flask_admin.contrib.sqla import ModelView
 from distutils.log import error
 import json
 
-app = Flask(__name__, template_folder='.')
+app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite'
 db = SQLAlchemy(app)
 api = Api(app)
