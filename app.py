@@ -1,14 +1,11 @@
-from distutils.log import error
-from enum import unique
 from flask import Flask, render_template, jsonify, request, redirect, session, g
 from flask_restful import Api, Resource
-from flask_admin import Admin
-from flask_admin.contrib.sqla import ModelView
-
-import json
-
 from flask.helpers import url_for
 from flask_sqlalchemy import SQLAlchemy
+from flask_admin import Admin
+from flask_admin.contrib.sqla import ModelView
+from distutils.log import error
+import json
 
 app = Flask(__name__, template_folder='.')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite'
@@ -31,6 +28,7 @@ class Users(db.Model):
 
     def __repr__(self) -> str:
         return '<User %r>' % self.username
+
 
 class Teachers(db.Model):
     __tablename__ = 'teachers'
@@ -77,14 +75,15 @@ class Classes(db.Model):
     def __repr__(self) -> str:
         return '<User %r>' % self.course_name
 
+
 class SecureModelView(ModelView):
     def is_accessible(self):
-        try: 
-            return session['user_id']==Users.query.filter_by(id=1).first().id
+        try:
+            return session['user_id'] == Users.query.filter_by(id=1).first().id
         except:
             return False
-    
-    
+
+
 admin.add_view(SecureModelView(Classes, db.session))
 admin.add_view(SecureModelView(Students, db.session))
 admin.add_view(SecureModelView(Enrollment_table, db.session))
@@ -109,6 +108,7 @@ class updateDB(Resource):
             print(query.class_id, query.student_id)
             query.grade = json_data['student'][name]
             db.session.commit()
+
 
 class getClasses(Resource):
     def get(self):
@@ -137,7 +137,7 @@ class getClasses(Resource):
                 current_teacher = Teachers.query.filter_by(
                     id=current_cls.teacher_id).first()
                 json_data.update({cls[0]: {"class_name": current_cls.course_name, "time": current_cls.day_time,
-                                "teacher_name": current_teacher.name, "num_enrolled": cls[3], 'capacity': current_cls.capacity}})
+                                           "teacher_name": current_teacher.name, "num_enrolled": cls[3], 'capacity': current_cls.capacity}})
             return json_data
         return error(400)
 
@@ -177,10 +177,9 @@ class getTeacherClasses(Resource):
                 else:
                     num_enrolled = 0
                 json_data.update({cls.id: {"class_name": cls.course_name, "time": cls.day_time,
-                                "teacher_name": query_teacher.name, "num_enrolled": num_enrolled, 'capacity': cls.capacity}})
+                                           "teacher_name": query_teacher.name, "num_enrolled": num_enrolled, 'capacity': cls.capacity}})
             return json_data
         return error(400)
-
 
 
 api.add_resource(getClasses, '/student/classes')
@@ -188,8 +187,6 @@ api.add_resource(getTeacherClasses, '/teacher/classes')
 api.add_resource(updateDB, '/update_grades')
 
 # assume no user if there is in session then get user g.user for now did only student but have to add teacher also this g.user is used in student html to get name
-
-
 @app.before_request
 def before_request():
     g.user = None
@@ -207,7 +204,6 @@ def student_logged():
     if not g.user:
         return redirect(url_for('login_post'))
     return render_template('student.html')
-
 
 
 @app.route('/teacher')
@@ -263,12 +259,14 @@ def login_post():
                 if isTeacher:
                     return redirect(url_for('teacher_logged'))
                 return redirect(url_for('student_logged'))
-            
+
             else:
                 return redirect(url_for('login_post'))
     return render_template('login.html')
 
 # this is to logout the user
+
+
 @app.route('/my-link/')
 def my_link():
     #  pop the user fro the current session then redirect to login
