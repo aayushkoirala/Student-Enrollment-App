@@ -4,6 +4,7 @@ from flask import Flask, render_template, jsonify, request, redirect, session, g
 from flask_restful import Api, Resource
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
+
 import json
 
 from flask.helpers import url_for
@@ -90,12 +91,14 @@ class Classes(db.Model):
 
 db.drop_all()
 db.create_all()
-user = Users(id=1, username='a', password='b')
+admin1 = Users(id=1, username='admin', password='123')
+user = Users(id=3, username='a', password='b')
 user23 = Users(id=2, username='c', password='d')
 user2 = Users(id=4, username='b', password='d')
 db.session.add(user)
 db.session.add(user23)
 db.session.add(user2)
+db.session.add(admin1)
 db.session.commit()
 student = Students(id=100, name='Yoan', user_id=user.id)
 db.session.add(student)
@@ -151,12 +154,16 @@ enr3 = Enrollment_table(id=3, class_id=class3.id,
 db.session.add(enr3)
 db.session.commit()
 
-
-admin.add_view(ModelView(Classes, db.session))
-admin.add_view(ModelView(Students, db.session))
-admin.add_view(ModelView(Enrollment_table, db.session))
-admin.add_view(ModelView(Teachers, db.session))
-admin.add_view(ModelView(Users, db.session))
+class SecureModelView(ModelView):
+    def is_accessible(self):
+        return session['user_id']==Users.query.filter_by(id=1).first().id
+    
+    
+admin.add_view(SecureModelView(Classes, db.session))
+admin.add_view(SecureModelView(Students, db.session))
+admin.add_view(SecureModelView(Enrollment_table, db.session))
+admin.add_view(SecureModelView(Teachers, db.session))
+admin.add_view(SecureModelView(Users, db.session))
 
 
 class updateDB(Resource):
@@ -332,7 +339,10 @@ def login_post():
         if query_user is not None:
             if password == query_user.password:
                 session['user_id'] = query_user.id
-
+                print(session['user_id'])
+                print(Users.query.filter_by(id=1).first().id)
+                if session['user_id'] == Users.query.filter_by(id=1).first().id:
+                    return redirect('/admin')
                 query = Students.query.filter_by(user_id=query_user.id).first()
                 isTeacher = False
                 if query == None:
