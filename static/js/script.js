@@ -29,8 +29,6 @@ function currClasses() {
   };
 }
 
-
-
 function potentialClasses() {
   const xhttp = new XMLHttpRequest();
   const method = "GET";
@@ -62,7 +60,7 @@ function potentialClasses() {
           "/" +
           html[key]["capacity"] +
           "</td><td>" +
-          "<button id='addUsers' onclick='addUsers(potenta" +
+          "<button id='addUsers' onclick='addCourses(potenta" +
           key +
           ")'>+</button>" +
           "</td></tr>";
@@ -91,21 +89,21 @@ function potentialClasses() {
   };
 }
 
-function addUsers(potenta) {
+function addCourses(potenta) {
   const json_datav2 = {
     class_id: potenta.innerHTML,
   };
 
   const xhttp = new XMLHttpRequest();
   const method = "POST";
-  const url = "http://127.0.0.1:5000/add_course";
+  const url = "http://127.0.0.1:5000/student/add_course";
 
   const async = true;
   xhttp.open(method, url, async);
   console.log(JSON.stringify(json_datav2));
   xhttp.send(JSON.stringify(json_datav2));
-  potentialClasses()
-  currClasses()
+  potentialClasses();
+  currClasses();
 }
 
 function getTeacherClasses() {
