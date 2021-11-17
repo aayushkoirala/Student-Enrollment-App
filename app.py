@@ -265,8 +265,6 @@ def login_post():
     return render_template('login.html')
 
 # this is to logout the user
-
-
 @app.route('/my-link/')
 def my_link():
     #  pop the user fro the current session then redirect to login
