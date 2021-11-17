@@ -139,9 +139,9 @@ class updateDB(Resource):
         json_data = request.data
         # to double quotes to make it valid JSON
         my_json = json_data.decode('utf8').replace("'", '"')
-        print("HEREARAERAESRS")
-        print(my_json)
-        print('- ' * 20)
+        # print("HEREARAERAESRS")
+        # print(my_json)
+        # print('- ' * 20)
 
         # Load the JSON to a Python list & dump it back out as formatted JSON
         data = json.loads(my_json)
@@ -150,9 +150,9 @@ class updateDB(Resource):
 
         for name in json_data['student']:
             query_student = Students.query.filter_by(name=name).first()
-            print(query_student)
+            
             query = Enrollment_table.query.filter_by(student_id=query_student.id).first()
-            print(query)
+            
             query.grade = json_data['student'][name]
             db.session.commit()
             
@@ -206,19 +206,12 @@ class getTeacherClasses(Resource):
             json_data = json.loads("{}")
             
             #this is calculating the number of students enrolled in 1 class
-            print(list_classes)
             for i, cls in enumerate(list_classes):
                 count = 0
                 for q in query:
-                    x = cls[0]
-                    y = q.id
-                    passing = int(x) == int(y)
-                    print(id(cls[0]), id(q.class_id), passing)
-                    if cls[0] == q.id:
-                        print(cls[0], q.class_id)
+                    if cls[0] == q.class_id:
                         count += 1
                 list_classes[i].append(count)
-                
             #this is formatting the data to be sent out
             for cls in query_classes:
                 
@@ -228,7 +221,6 @@ class getTeacherClasses(Resource):
                 else:
                     num_enrolled = 0
                 json_data.update({cls.id:{"class_name":cls.course_name,"time":cls.day_time, "teacher_name":query_teacher.name, "num_enrolled":num_enrolled, 'capacity':cls.capacity}})
-            print(json_data)
             return json_data
         return error(400)
 
@@ -264,7 +256,7 @@ def teacher_logged():
 
 @app.route('/student_grades/<id>')
 def edit_grades(id):
-    print(id)
+    
     if not g.user:
         return redirect(url_for('login_post'))
     return render_template(f'edit_grades.html', id=id)
@@ -273,19 +265,17 @@ def edit_grades(id):
 def edit_get_grades(id):
     query = Enrollment_table.query.all()
     data=[]
-    print(id)
-    print(query)
     for q in query:
         if q.class_id == int(id):
-            #print(q, q[0], id)
+            
             data.append([q.class_id,q.student_id,q.grade])
     json_data = json.loads("{}")
-    print(data)
+    
     for i, cls in enumerate(data):
         student = Students.query.filter_by(id=cls[1]).first()
-        print(student)
+        
         json_data.update({i:{"student_name": student.name, "grade":cls[2]}})
-    print(json_data)
+    
     return json_data
 
 @app.route('/login', methods=['GET', 'POST'])
